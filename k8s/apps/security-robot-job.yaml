@@ -31,6 +31,12 @@ spec:
           env:
             - name: AGENT_SERVICE_URL
               value: "http://agent-serving:8000"
+            - name: GROQ_REASONING_MODEL
+              value: "qwen/qwen3.8-27b"
+            - name: GROQ_ROUTER_MODEL
+              value: "qwen/qwen3.8-27b"
+            - name: LANGFUSE_HOST
+              value: "http://langfuse:3000"
           envFrom:
             - configMapRef:
                 name: agent-config
