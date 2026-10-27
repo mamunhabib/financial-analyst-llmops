@@ -105,22 +105,22 @@ st.markdown(
 if "session_id" not in st.session_state:
     st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
 
+INITIAL_WELCOME_MESSAGE = {
+    "role": "assistant",
+    "content": (
+        "👋 **Welcome to the Autonomous Financial & Market Analyst Agent.**\n\n"
+        "I am an institutional-grade financial intelligence system protected by a 4-layer defense-in-depth LLMOps pipeline:\n\n"
+        "• **SEC Form 10-K RAG:** Ingested semantic disclosures for Apple, Microsoft, and NVIDIA.\n"
+        "• **Live Market Gateway:** Real-time stock prices, benchmark 10-Year Treasury yields, and financial news.\n"
+        "• **Deterministic AST Sandbox:** Audited Python calculations for DCF, WACC, and P/E metrics.\n"
+        "• **Guardrails:** Llama Prompt Guard 86M for prompt injection defense + FINRA/SEC compliance enforcement.\n\n"
+        "Select a sample prompt from the sidebar or type any ticker valuation question below to begin!"
+    ),
+    "metadata": None,
+}
+
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "assistant",
-            "content": (
-                "👋 **Welcome to the Autonomous Financial & Market Analyst Agent.**\n\n"
-                "I am an institutional-grade financial intelligence system protected by a 4-layer defense-in-depth LLMOps pipeline:\n\n"
-                "• **SEC Form 10-K RAG:** Ingested semantic disclosures for Apple, Microsoft, and NVIDIA.\n"
-                "• **Live Market Gateway:** Real-time stock prices, benchmark 10-Year Treasury yields, and financial news.\n"
-                "• **Deterministic AST Sandbox:** Audited Python calculations for DCF, WACC, and P/E metrics.\n"
-                "• **Guardrails:** Llama Prompt Guard 86M for prompt injection defense + FINRA/SEC compliance enforcement.\n\n"
-                "Select a sample prompt from the sidebar or type any ticker valuation question below to begin!"
-            ),
-            "metadata": None,
-        }
-    ]
+    st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
 
 # -------------------------------------------------------------
 # SIDEBAR CONTROLS & ARCHITECTURE COCKPIT
@@ -186,6 +186,11 @@ with st.sidebar:
         if st.button("🎯 Fire Payload", use_container_width=True, help="Injects this specific adversarial attack into the chat"):
             selected_sample = chosen_scenario.prompt
 
+    if selected_sample:
+        # Auto-clear previous runs so each test case runs on a clean, focused canvas
+        st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
+        st.session_state.messages = []
+
     with col_btn2:
         run_full_audit = st.button("⚡ 10/10 Audit", use_container_width=True, help="Executes the full red-teaming matrix on demand")
 
@@ -200,7 +205,7 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🔄 Reset Conversation Session", use_container_width=True):
         st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
-        st.session_state.messages = [st.session_state.messages[0]]
+        st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
         st.rerun()
 
     st.markdown("---")
@@ -306,9 +311,18 @@ for msg in st.session_state.messages:
 # -------------------------------------------------------------
 user_query = st.chat_input("Enter your financial inquiry, ticker symbol (e.g. AAPL), or valuation prompt...")
 
-# Handle sidebar preset prompt selection
+# Handle sidebar preset prompt selection or queued manual query
 if selected_sample:
     user_query = selected_sample
+elif "queued_query" in st.session_state and st.session_state.queued_query:
+    user_query = st.session_state.pop("queued_query")
+elif user_query and len(st.session_state.messages) > 0:
+    # If the user typed a new query and there is existing chat on screen,
+    # purge previous conversation and rerun so only the new query is rendered freshly
+    st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
+    st.session_state.messages = []
+    st.session_state.queued_query = user_query
+    st.rerun()
 
 if user_query:
     # 1. Append User Message
