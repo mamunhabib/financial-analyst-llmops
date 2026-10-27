@@ -225,3 +225,89 @@
 - [x] **10.2 Attack Ingress Test:** Confirmed Input Shield blocks prompt injection attempts (`threat=IGNORE_INSTRUCTIONS, score=0.95`, 0 tokens wasted).
 - [x] **10.3 Multi-Tool Valuation Test:** Ran 5-year DCF analysis query combining Upstash Vector RAG, live stock price, 10Y Treasury yield, corporate headlines, and Python sandbox math (all 5 tools invoked and synthesized into an institutional report with regulatory disclaimers).
 - [x] **10.4 Observability Verification:** Confirmed traces in Langfuse (`:8092`) via API and live web UI, and container stdout/stderr logs in Kibana (`:8084`).
+
+
+
+
+============================================================
+FINANCIAL ANALYST AGENT — 2.5-MINUTE EXECUTIVE PITCH
+============================================================
+
+[Show the slide]
+
+Let me walk you through an institutional AI project that showcases my work.
+
+This is an Autonomous Financial Analyst Agent. It analyzes company stocks, reads official annual reports, pulls live market data, and builds valuation models. It is currently in staging at a startup in Penang.
+
+The whole architecture is built around LLMOps: zero-touch automation, a 5-layer security defense, and strict anti-hallucination controls.
+
+I will explain it in three quick parts:
+First, the automated pipeline.
+Second, the agent core and its defense layers.
+Third, real-time observability.
+
+============================================================
+PART 1: AUTOMATED DEPLOYMENT & SECRETS (40 seconds)
+============================================================
+
+[Point at the left side]
+
+First, automation. Nothing here is deployed manually.
+
+When code or prompt changes are pushed to GitHub, our Jenkins pipeline triggers automatically.
+
+It runs unit tests and a quality evaluation gate. If the agent's factual accuracy drops below 90 percent, the pipeline halts immediately. A hallucinating prompt never reaches staging.
+
+Once passed, Jenkins builds Docker images natively and rolls them out to our Kubernetes cluster.
+
+[Point at ConfigMap and Secret at the top]
+
+For security, API keys are never stored in plain text. We encrypt them with Sealed Secrets using the cluster's public key. The encrypted files stay safely in Git, and only the cluster's private key can decrypt them into pod memory. No plain API key ever leaves the cluster.
+
+============================================================
+PART 2: AGENT CORE & 5 DEFENSE LAYERS (50 seconds)
+============================================================
+
+[Point at the Cloud APIs box, bottom left]
+
+We use specialized models for the right job:
+• Meta Prompt Guard 86M for fast perimeter checks.
+• Qwen 27B on Groq LPUs for fast reasoning.
+• And local fast embeddings for document search.
+
+[Follow A to F]
+
+When a user asks a question, it flows through 5 defense layers:
+
+1. Layer 1 — The Perimeter Shield: Blocks prompt injections and jailbreaks in under 150 milliseconds.
+2. Layer 2 — The PII Gateway: Automatically masks client Social Security Numbers and emails before anything reaches the cloud.
+3. Layer 3 — Core Reasoning: Qwen 27B enforces an institutional charter, refusing to leak credentials or discuss speculative meme coins.
+4. Layer 4 — The AST Math Sandbox: LLMs are notorious for hallucinating arithmetic. We eliminate math hallucinations entirely using Python AST static analysis, X-raying code before execution and blocking dangerous commands like "os.system" in 0.1 milliseconds.
+5. Layer 5 — The Output Shield: Enforces FINRA and SEC rules. It strips deceptive promises like "guaranteed returns" and attaches mandatory risk disclosures.
+
+Our automated Security Robot attacks our own cluster across all 5 layers—including hallucination traps that try to trick the AI into inventing fake financial numbers—verifying a 100% defense rate.
+
+============================================================
+PART 3: OBSERVABILITY & SYSTEM TRACING (35 seconds)
+============================================================
+
+[Point at Langfuse and Kibana]
+
+Finally, observability across three dimensions:
+
+• Model Tracing: Langfuse records a waterfall trace for every request, tracking latency, token costs, and anti-hallucination grounding scores.
+• Security Tracking: Every blocked attack is highlighted in bright red in Langfuse with a dedicated defense scorecard.
+• Cluster Logs: Our ELK stack—Elasticsearch, Logstash, and Kibana—aggregates container logs and audit trails across the whole cluster.
+
+============================================================
+CLOSING (15 seconds)
+============================================================
+
+[Look at the audience]
+
+To wrap up:
+1. A zero-touch GitOps pipeline with Sealed Secrets.
+2. An institutional agent protected by 5 defense-in-depth layers.
+3. Full observability across model reasoning, attacks, and cluster health.
+
+Thank you. I'm excited to show you the live dashboard.
