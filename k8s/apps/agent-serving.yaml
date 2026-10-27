@@ -29,8 +29,8 @@ spec:
         - name: git-secret
       containers:
         - name: agent-serving
-          image: ghcr.io/mamunhabib/financial-analyst-agent/agent-serving:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/mamunhabib/financial-analyst-agent-serving:latest
+          imagePullPolicy: Always
           ports:
             - name: http-api
               containerPort: 8000

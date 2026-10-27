@@ -22,8 +22,8 @@ spec:
         - name: git-secret
       containers:
         - name: security-robot
-          image: ghcr.io/mamunhabib/financial-analyst-agent/agent-serving:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/mamunhabib/financial-analyst-agent-serving:latest
+          imagePullPolicy: Always
           command:
             - python
             - -m

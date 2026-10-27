@@ -29,8 +29,8 @@ spec:
         - name: git-secret
       containers:
         - name: streamlit-ui
-          image: ghcr.io/mamunhabib/financial-analyst-agent/streamlit-ui:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/mamunhabib/financial-analyst-streamlit-ui:latest
+          imagePullPolicy: Always
           ports:
             - name: http-ui
               containerPort: 8501

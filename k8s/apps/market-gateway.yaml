@@ -29,8 +29,8 @@ spec:
         - name: git-secret
       containers:
         - name: market-gateway
-          image: ghcr.io/mamunhabib/financial-analyst-agent/market-gateway:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/mamunhabib/financial-analyst-market-gateway:latest
+          imagePullPolicy: Always
           ports:
             - name: http-feed
               containerPort: 8004
