@@ -1,0 +1,51 @@
+# ==============================================================================
+# Financial & Market Analyst Agent — Pinned Production Dependencies
+# Target Runtime: Python 3.11 / 3.12 (Apple Silicon & Linux Containers)
+# ==============================================================================
+
+# Core Ingress & Web Framework
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+pydantic-settings==2.3.4
+
+# Cloud LLMs & Guardrail Clients
+groq==0.9.0
+huggingface-hub==0.23.4
+langchain==0.2.6
+langchain-core==0.2.10
+langchain-community==0.2.6
+langchain-groq==0.1.5
+
+# Serverless Data Tier (Upstash Redis & Upstash Vector)
+upstash-redis==1.0.0
+upstash-vector==0.6.0
+redis==5.0.7
+
+# Market Feeds & Deterministic Math Sandbox
+yfinance==0.2.40
+pandas==2.2.2
+numpy==1.26.4
+scipy==1.13.1
+
+# Interactive UI Frontend
+streamlit==1.36.0
+plotly==5.22.0
+
+# HTTP & Utilities
+requests==2.32.3
+httpx==0.27.0
+python-dotenv==1.0.1
+pyyaml==6.0.1
+
+# Observability & Tracing
+langfuse==2.38.1
+opentelemetry-api==1.25.0
+opentelemetry-sdk==1.25.0
+
+# Testing & Quality Gates (Dev / CI)
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-mock==3.14.0
+ruff==0.5.0
+deepeval==1.1.0

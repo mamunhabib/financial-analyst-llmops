@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: security-robot-runner
+  namespace: financial-agent
+  labels:
+    app: security-robot
+    app.kubernetes.io/name: security-robot
+    app.kubernetes.io/part-of: llmops-financial-analyst
+    app.kubernetes.io/component: red-team-adversarial-audit
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: security-robot
+        app.kubernetes.io/name: security-robot
+        app.kubernetes.io/part-of: llmops-financial-analyst
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: git-secret
+      containers:
+        - name: security-robot
+          image: ghcr.io/mamunhabib/financial-analyst-agent/agent-serving:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - python
+            - -m
+            - tests.security_robot.run_attacks
+          env:
+            - name: AGENT_SERVICE_URL
+              value: "http://agent-serving:8000"
+          envFrom:
+            - configMapRef:
+                name: agent-config
+            - secretRef:
+                name: agent-api-secrets
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL

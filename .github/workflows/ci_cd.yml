@@ -1,0 +1,162 @@
+name: CI/CD Pipeline — LLMOps & Guardrails
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/financial-analyst-agent
+
+jobs:
+  # ----------------------------------------------------------------------------
+  # Stage 1: Quality Gate & LLM Evaluation
+  # ----------------------------------------------------------------------------
+  test-and-evaluate:
+    name: Lint, Test & DeepEval Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Code Quality & Lint Check (Ruff)
+        run: |
+          ruff check . --ignore E501
+
+      - name: Headless Streamlit UI Verification
+        run: |
+          python -c "
+          from streamlit.testing.v1 import AppTest
+          from ui.components.charts import render_stock_chart, render_dcf_sensitivity_table
+
+          # Verify Plotly charts
+          fig1 = render_stock_chart('AAPL')
+          assert fig1 is not None and len(fig1.data) == 3
+          fig2 = render_dcf_sensitivity_table([100.0, 115.0, 130.0, 145.0, 160.0])
+          assert fig2 is not None and len(fig2.data) == 1
+
+          # Verify Streamlit page lifecycle
+          at = AppTest.from_file('ui/app.py')
+          at.run()
+          assert len(at.exception) == 0, f'AppTest Exceptions: {at.exception}'
+          print('Headless UI Verification: 100% Passed')
+          "
+
+      - name: DeepEval Automated Quality Benchmark Gate
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          UPSTASH_VECTOR_REST_URL: ${{ secrets.UPSTASH_VECTOR_REST_URL }}
+          UPSTASH_VECTOR_REST_TOKEN: ${{ secrets.UPSTASH_VECTOR_REST_TOKEN }}
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
+        run: |
+          python -m observability.deepeval_gate
+
+  # ----------------------------------------------------------------------------
+  # Stage 2: Multi-Container Docker Build & Push to GHCR
+  # ----------------------------------------------------------------------------
+  build-and-push:
+    name: Build & Push Images to GHCR
+    needs: test-and-evaluate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 1. Market Gateway Microservice (:8004)
+      - name: Build & Push Market Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./market_gateway/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/market-gateway:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 2. FastAPI Agent Ingress Pod (:8000 / Ext :8091)
+      - name: Build & Push FastAPI Agent Serving
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./serving/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/agent-serving:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 3. Streamlit Conversational Dashboard (:8501 / Ext :8090)
+      - name: Build & Push Streamlit UI
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./ui/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/streamlit-ui:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ----------------------------------------------------------------------------
+  # Stage 3: Kubernetes Deployment Rollout
+  # ----------------------------------------------------------------------------
+  deploy-k8s:
+    name: Deploy to Kubernetes Cluster
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Kubeconfig
+        if: env.KUBECONFIG_DATA != ''
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_DATA" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Rolling Update Deployment
+        if: env.KUBECONFIG_DATA != ''
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+        run: |
+          kubectl apply -f k8s/apps/ -n financial-agent
+          kubectl rollout status deployment/market-gateway -n financial-agent --timeout=120s
+          kubectl rollout status deployment/agent-serving -n financial-agent --timeout=120s
+          kubectl rollout status deployment/streamlit-ui -n financial-agent --timeout=120s

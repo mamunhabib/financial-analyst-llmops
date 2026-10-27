@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: langfuse-postgres-pvc
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: langfuse-postgres-storage
+    app.kubernetes.io/component: database-storage
+    app.kubernetes.io/part-of: llmops-financial-analyst
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

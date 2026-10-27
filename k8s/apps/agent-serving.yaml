@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-serving
+  namespace: financial-agent
+  labels:
+    app: agent-serving
+    app.kubernetes.io/name: agent-serving
+    app.kubernetes.io/part-of: llmops-financial-analyst
+    app.kubernetes.io/component: agent-ingress-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-serving
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: agent-serving
+        app.kubernetes.io/name: agent-serving
+        app.kubernetes.io/part-of: llmops-financial-analyst
+    spec:
+      imagePullSecrets:
+        - name: git-secret
+      containers:
+        - name: agent-serving
+          image: ghcr.io/mamunhabib/financial-analyst-agent/agent-serving:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-api
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: agent-config
+            - secretRef:
+                name: agent-api-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1536Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-serving
+  namespace: financial-agent
+  labels:
+    app: agent-serving
+    app.kubernetes.io/name: agent-serving
+    app.kubernetes.io/part-of: llmops-financial-analyst
+spec:
+  type: LoadBalancer
+  selector:
+    app: agent-serving
+  ports:
+    - name: http-ingress
+      port: 8091
+      targetPort: 8000
+      protocol: TCP

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agent-config
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: financial-agent
+    app.kubernetes.io/part-of: llmops-financial-analyst
+data:
+  # ----------------------------------------------------------------------------
+  # 1. Environment & Service Metadata
+  # ----------------------------------------------------------------------------
+  ENVIRONMENT: "production"
+  APP_NAME: "Financial & Market Analyst Agent"
+  APP_VERSION: "0.1.0"
+  DEBUG: "false"
+
+  # ----------------------------------------------------------------------------
+  # 2. Internal Microservice Ports & Cluster DNS Endpoints
+  # (Pods communicate directly via Kubernetes Service names)
+  # ----------------------------------------------------------------------------
+  STREAMLIT_PORT: "8501"
+  AGENT_PORT: "8000"
+  MARKET_GATEWAY_PORT: "8004"
+  MARKET_GATEWAY_URL: "http://market-gateway:8004"
+  AGENT_SERVICE_URL: "http://agent-serving:8000"
+
+  # ----------------------------------------------------------------------------
+  # 3. Model Identifiers (Groq LPU & Hugging Face)
+  # ----------------------------------------------------------------------------
+  GROQ_REASONING_MODEL: "qwen/qwen3.8-27b"
+  GROQ_ROUTER_MODEL: "qwen/qwen3.8-27b"
+  GROQ_GUARD_MODEL: "llama-guard-3-8b"
+  HF_SHIELD_MODEL: "meta-llama/Prompt-Guard-86M"
+  HF_EMBEDDING_MODEL: "BAAI/bge-small-en-v1.5"
+
+  # ----------------------------------------------------------------------------
+  # 4. Observability & Runtime Thresholds
+  # ----------------------------------------------------------------------------
+  LANGFUSE_HOST: "http://langfuse:3000"
+  DEEPEVAL_THRESHOLD: "0.90"
+  VECTOR_TOP_K: "4"
+  SESSION_TTL_SECONDS: "86400"
+  MAX_REACT_LOOPS: "5"
+  INJECTION_THRESHOLD: "0.85"
+  REQUEST_TIMEOUT_SECONDS: "30"

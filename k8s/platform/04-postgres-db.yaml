@@ -1,0 +1,75 @@
+---
+# ------------------------------------------------------------------------------
+# PostgreSQL Database Deployment (Storage Backend for Langfuse)
+# ------------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langfuse-postgres
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: langfuse-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: llmops-financial-analyst
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langfuse-postgres
+  template:
+    metadata:
+      labels:
+        app: langfuse-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: "langfuse"
+            - name: POSTGRES_PASSWORD
+              value: "langfuse_dev_secret"
+            - name: POSTGRES_DB
+              value: "langfuse"
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          ports:
+            - containerPort: 5432
+              name: postgres
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: langfuse-postgres-pvc
+
+---
+# ------------------------------------------------------------------------------
+# PostgreSQL ClusterIP Service (Internal cluster network on :5432)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: langfuse-postgres
+  namespace: financial-agent
+  labels:
+    app.kubernetes.io/name: langfuse-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: llmops-financial-analyst
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: langfuse-postgres

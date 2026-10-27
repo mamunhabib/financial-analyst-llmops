@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-ui
+  namespace: financial-agent
+  labels:
+    app: streamlit-ui
+    app.kubernetes.io/name: streamlit-ui
+    app.kubernetes.io/part-of: llmops-financial-analyst
+    app.kubernetes.io/component: conversational-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit-ui
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: streamlit-ui
+        app.kubernetes.io/name: streamlit-ui
+        app.kubernetes.io/part-of: llmops-financial-analyst
+    spec:
+      imagePullSecrets:
+        - name: git-secret
+      containers:
+        - name: streamlit-ui
+          image: ghcr.io/mamunhabib/financial-analyst-agent/streamlit-ui:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-ui
+              containerPort: 8501
+              protocol: TCP
+          env:
+            - name: AGENT_SERVICE_URL
+              value: "http://agent-serving:8000"
+            - name: MARKET_GATEWAY_URL
+              value: "http://market-gateway:8004"
+          envFrom:
+            - configMapRef:
+                name: agent-config
+            - secretRef:
+                name: agent-api-secrets
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-ui
+  namespace: financial-agent
+  labels:
+    app: streamlit-ui
+    app.kubernetes.io/name: streamlit-ui
+    app.kubernetes.io/part-of: llmops-financial-analyst
+spec:
+  type: LoadBalancer
+  selector:
+    app: streamlit-ui
+  ports:
+    - name: http-dashboard
+      port: 8090
+      targetPort: 8501
+      protocol: TCP

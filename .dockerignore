@@ -1,0 +1,29 @@
+# ==============================================================================
+# Production Docker Ignore Configuration
+# ==============================================================================
+
+# Virtual environments & caches
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+
+# Local data & cache
+data/
+*.log
+.DS_Store
+
+# Git & local config
+.git/
+.github/
+
+# Tests: tests/security_robot and tests/demo_paths are included for on-demand UI & CLI execution
+# (Caches and bytecode inside tests remain strictly ignored above)
+
+# Local secrets & certificates
+.env
+*.pem

@@ -1,0 +1,41 @@
+# ==============================================================================
+# Git Ignore Configuration — Financial & Market Analyst Agent (Project 5)
+# ==============================================================================
+
+# Architecture & HTML artifacts
+# (Keep architecture.png in repository; exclude raw HTML source)
+architecture.html
+*.html
+
+# Sensitive Secrets, Environment Variables & Cluster Certificates (CRITICAL)
+.env
+*.pem
+pub-cert.pem
+k8s/raw-*.yaml
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+.Python
+
+# Python Bytecode, Caches & Testing Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local Data & Scraped Caches
+data/
+data/sec_filings/
+*.log
+logs/
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
