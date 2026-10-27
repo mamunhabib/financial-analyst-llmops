@@ -48,6 +48,7 @@ COPY config/ /app/config/
 COPY src/ /app/src/
 COPY observability/ /app/observability/
 COPY serving/ /app/serving/
+COPY market_gateway/ /app/market_gateway/
 COPY tests/ /app/tests/
 COPY pyproject.toml /app/
 
