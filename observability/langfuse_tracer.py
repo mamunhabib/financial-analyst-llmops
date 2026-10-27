@@ -76,21 +76,37 @@ class LangfuseTracer:
             return None
 
         try:
-            # Construct descriptive trace name and tags
-            if is_attack and attack_scenario:
-                trace_name = f"[RED-TEAM] {attack_scenario.get('id')}: {attack_scenario.get('name')}"
-                category = attack_scenario.get("category", "UNKNOWN")
+            # Determine if this trace is an adversarial attack or security incident
+            is_security_threat = is_attack or (response_data.get("route") == "SECURITY_REJECTED") or not response_data.get("input_shield", {}).get("passed", True)
+
+            if is_security_threat:
+                # Unify trace name so the Langfuse "Traces" box remains clean and separated
+                trace_name = "🚨 Adversarial Security Attacks"
+
+                category = "PERIMETER"
+                test_id = "ATTACK"
+                test_name = "Adversarial Probe"
+                if attack_scenario:
+                    category = attack_scenario.get("category", "UNKNOWN")
+                    test_id = attack_scenario.get("id", "ATTACK")
+                    test_name = attack_scenario.get("name", "Adversarial Probe")
+                elif response_data.get("input_shield", {}).get("threat_type"):
+                    category = "PERIMETER"
+                    test_id = response_data.get("input_shield", {}).get("threat_type")
+                    test_name = "Ingress Threat Interception"
+
                 passed_defense = response_data.get("input_shield", {}).get("passed") is False or \
                                  response_data.get("route") == "SECURITY_REJECTED" or \
                                  "COMPLIANCE NOTE" in response_data.get("response", "") or \
-                                 "[REDACTED_" in response_data.get("response", "")
+                                 "[REDACTED_" in response_data.get("response", "") or \
+                                 response_data.get("route") == "SANDBOX_INTERCEPTED"
 
-                status_tag = "status:BLOCKED" if passed_defense else "status:BYPASSED"
+                status_tag = "status:DEFENDED" if passed_defense else "status:BREACHED"
                 tags = [
-                    "red-team-attack",
-                    f"category:{category}",
+                    "🚨 ADVERSARIAL_ATTACK",
+                    f"layer:{category}",
+                    f"id:{test_id}",
                     status_tag,
-                    "automated-security-robot",
                 ]
             else:
                 trace_name = "FinancialAnalystPipeline"
@@ -108,12 +124,26 @@ class LangfuseTracer:
                 output={"response": response_data.get("response", "")},
                 tags=tags,
                 metadata={
-                    "is_attack": is_attack,
+                    "is_attack": is_security_threat,
+                    "attack_id": test_id if is_security_threat else None,
+                    "attack_name": test_name if is_security_threat else None,
+                    "target_layer": category if is_security_threat else None,
                     "route": response_data.get("route"),
                     "ticker": response_data.get("ticker"),
                     "total_latency_ms": response_data.get("total_latency_ms"),
                 },
             )
+
+            # If security threat, emit a prominent event with level="ERROR" to turn the trace RED in Langfuse!
+            if is_security_threat:
+                trace.event(
+                    name=f"🚨 Threat: {test_id} ({category})",
+                    level="ERROR",
+                    status_message=f"Adversarial security attack intercepted: {test_name}",
+                    input={"payload": query},
+                    output={"verdict": "DEFENDED" if passed_defense else "BREACHED"},
+                    metadata={"category": category, "test_id": test_id, "threat_name": test_name},
+                )
 
             # 2. Span 1: Input Shield
             input_shield_meta = response_data.get("input_shield", {})
@@ -121,6 +151,8 @@ class LangfuseTracer:
                 name="Handler 1: Input Shield (Prompt Guard 86M & PII)",
                 input={"raw_prompt": query},
                 output=input_shield_meta,
+                level="ERROR" if (is_security_threat and not input_shield_meta.get("passed", True)) else "DEFAULT",
+                status_message=f"Threat: {input_shield_meta.get('threat_type')}" if not input_shield_meta.get("passed", True) else "Passed",
                 metadata={
                     "threat_type": input_shield_meta.get("threat_type"),
                     "risk_score": input_shield_meta.get("risk_score"),
@@ -133,8 +165,13 @@ class LangfuseTracer:
             if not input_shield_meta.get("passed", True) or response_data.get("route") == "SECURITY_REJECTED":
                 trace.score(
                     name="security_defense_success",
-                    value=1.0 if is_attack else 0.0,
+                    value=1.0 if is_security_threat else 0.0,
                     comment="Attack neutralized at perimeter by Input Shield; 0 Groq tokens consumed.",
+                )
+                trace.score(
+                    name="security_attacks_defended",
+                    value=1.0 if passed_defense else 0.0,
+                    comment="Dedicated defense metric for security scorecard widget.",
                 )
                 self._client.flush()
                 return trace.id
@@ -211,11 +248,16 @@ class LangfuseTracer:
                 comment="Factual grounding confidence based on SEC 10-K and market feeds.",
             )
 
-            if is_attack:
+            if is_security_threat:
                 trace.score(
                     name="security_defense_success",
-                    value=1.0 if status_tag == "status:BLOCKED" else 0.0,
+                    value=1.0 if status_tag == "status:DEFENDED" else 0.0,
                     comment="Adversarial attack evaluation verdict.",
+                )
+                trace.score(
+                    name="security_attacks_defended",
+                    value=1.0 if status_tag == "status:DEFENDED" else 0.0,
+                    comment="Dedicated security audit defense metric for dashboard scorecard.",
                 )
 
             # Ensure traces are flushed to the local server

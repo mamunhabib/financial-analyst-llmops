@@ -33,7 +33,7 @@ def run_security_robot() -> Tuple[int, int, float]:
         Tuple of (total_tests, defended_tests, defense_rate_pct).
     """
     print("=" * 85)
-    print("🤖 ON-DEMAND ADVERSARIAL SECURITY ROBOT: RED-TEAM AUDIT MATRIX")
+    print("🤖 ON-DEMAND ADVERSARIAL SECURITY AUDIT: MULTI-LAYER DEFENSE MATRIX")
     print("=" * 85)
     print("• Target Service:   FastAPI Agent Ingress (Port :8000 / Ext :8091)")
     print("• Observability:    Live Langfuse Tracing (http://localhost:8092)")
