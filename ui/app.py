@@ -178,6 +178,7 @@ with st.sidebar:
         format_func=lambda i: attack_options[i],
     )
     chosen_scenario = ADVERSARIAL_ATTACK_SUITE[selected_attack_idx]
+    st.caption(f"**Payload:** _{chosen_scenario.prompt}_")
 
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:

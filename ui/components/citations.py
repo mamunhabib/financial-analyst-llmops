@@ -39,27 +39,25 @@ def render_guardrail_badges(
     }
     r_color = route_colors.get(route, "#6366f1")
 
-    # Generate badge HTML row
-    st.markdown(
-        f"""
-        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-family: Inter, -apple-system, sans-serif; font-size: 12px;">
-            <span style="background-color: {r_color}; color: white; padding: 4px 10px; border-radius: 9999px; font-weight: 600;">
-                Route: {route} {f'({ticker})' if ticker else ''}
-            </span>
-            <span style="background-color: {'#065f46' if input_passed else '#991b1b'}; color: white; padding: 4px 10px; border-radius: 9999px;">
-                {'🛡️ Input Shield: Passed' if input_passed else '🚨 Input Blocked'}
-                {'(PII Masked)' if pii_scrubbed else ''}
-            </span>
-            <span style="background-color: {'#1e3a8a' if output_passed else '#b45309'}; color: white; padding: 4px 10px; border-radius: 9999px;">
-                {'⚖️ FINRA/SEC: Compliant' if output_passed else '⚠️ Compliance Flag'} (Grounding: {int(grounding_score * 100)}%)
-            </span>
-            <span style="background-color: #334155; color: #cbd5e1; padding: 4px 10px; border-radius: 9999px;">
-                ⚡ {round(total_latency_ms, 0)}ms ({iterations} ReAct Step{'s' if iterations != 1 else ''})
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    ticker_str = f"({ticker})" if ticker else ""
+    input_text = "🛡️ Input Shield: Passed" if input_passed else "🚨 Input Blocked"
+    pii_text = " (PII Masked)" if pii_scrubbed else ""
+    input_bg = "#065f46" if input_passed else "#991b1b"
+    output_text = "⚖️ FINRA/SEC: Compliant" if output_passed else "⚠️ Compliance Flag"
+    output_bg = "#1e3a8a" if output_passed else "#b45309"
+    grounding_pct = int(grounding_score * 100)
+    latency_rounded = round(total_latency_ms, 0)
+    steps_plural = "s" if iterations != 1 else ""
+
+    badge_html = (
+        f'<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; font-family: Inter, -apple-system, sans-serif; font-size: 12px;">'
+        f'<span style="background-color: {r_color}; color: white; padding: 4px 10px; border-radius: 9999px; font-weight: 600;">Route: {route} {ticker_str}</span>'
+        f'<span style="background-color: {input_bg}; color: white; padding: 4px 10px; border-radius: 9999px;">{input_text}{pii_text}</span>'
+        f'<span style="background-color: {output_bg}; color: white; padding: 4px 10px; border-radius: 9999px;">{output_text} (Grounding: {grounding_pct}%)</span>'
+        f'<span style="background-color: #334155; color: #cbd5e1; padding: 4px 10px; border-radius: 9999px;">⚡ {latency_rounded}ms ({iterations} ReAct Step{steps_plural})</span>'
+        f'</div>'
     )
+    st.markdown(badge_html, unsafe_allow_html=True)
 
 
 def render_sec_citations(tool_calls: List[Dict[str, Any]]):
