@@ -29,6 +29,7 @@ from src.agent.engine import financial_agent
 from tests.security_robot.attack_payloads import ADVERSARIAL_ATTACK_SUITE
 from ui.components.charts import render_dcf_sensitivity_table, render_stock_chart
 from ui.components.citations import (
+    render_defense_layer_analysis,
     render_guardrail_badges,
     render_regulatory_disclaimer,
     render_sec_citations,
@@ -258,7 +259,11 @@ for msg in st.session_state.messages:
                 output_shield=meta.get("output_shield", {}),
                 total_latency_ms=meta.get("total_latency_ms", 0.0),
                 iterations=meta.get("iterations", 1),
+                tool_calls=meta.get("tool_calls", []),
             )
+
+            # Render Deep-Dive Defense Layer & Threat Analysis
+            render_defense_layer_analysis(meta)
 
             # ReAct Agent Thought Process & Tool Execution Accordion
             tool_calls = meta.get("tool_calls", [])
@@ -313,22 +318,43 @@ if user_query:
 
     # 2. Process Agent Pipeline with Real-Time Feedback
     with st.chat_message("assistant"):
-        with st.status("🧠 Executing Autonomous Financial Analyst Pipeline...", expanded=True) as status:
-            st.write("🛡️ **Phase 5.1:** Input Shield verifying prompt guard and PII masking...")
-            time.sleep(0.05)
-            st.write("🧭 **Phase 5.2:** Classifying routing intent and ticker extraction...")
-            time.sleep(0.05)
-            st.write("🤖 **Phase 5.3:** Executing ReAct reasoning loop on Groq LPU (`qwen/qwen3.8-27b`)...")
-
+        with st.status("🔍 Evaluating Defense-in-Depth Pipeline & Agent Routing...", expanded=True) as status:
             # Execute end-to-end agent pipeline
             response = financial_agent.process_query(
                 query=user_query,
                 session_id=st.session_state.session_id,
             )
 
-            st.write(f"⚖️ **Phase 5.4:** Output Shield auditing SEC/FINRA compliance (Grounding: {int(response.output_shield.get('grounding_score', 1.0) * 100)}%)...")
-            st.write("📊 **Phase 6.1:** OpenTelemetry waterfall spans pushed to Langfuse (`:8092`).")
-            status.update(label="✅ Analysis Complete!", state="complete", expanded=False)
+            if response.route == "SECURITY_REJECTED":
+                threat = response.input_shield.get("threat_type", "INSTRUCTION_OVERRIDE")
+                st.error(f"🛑 **Layer 1 (Perimeter Guard):** Malicious prompt detected (`{threat}`).")
+                st.write(f"⚡ **Circuit-Breaker:** Request terminated at ingress in `{response.total_latency_ms}ms` — zero Groq tokens consumed.")
+                st.caption("⏭️ Downstream nodes (Intent Router, ReAct Core, Output Shield) bypassed.")
+                status.update(label=f"🛑 Blocked at Perimeter: {threat}", state="error", expanded=False)
+            else:
+                if response.input_shield.get("pii_detected"):
+                    st.write("🔒 **Layer 1 (PII Gateway):** Sensitive client PII scrubbed to `[REDACTED]` tokens.")
+                else:
+                    st.write("🛡️ **Layer 1 (Perimeter Shield):** Prompt verified clean (0 injection patterns).")
+
+                st.write(f"🧭 **Layer 2 (Intent Router):** Classified as `{response.route}` (Ticker: `{response.ticker or 'None'}`).")
+                st.write(f"🤖 **Layer 3 (Core ReAct):** Reasoning completed in {response.iterations} step(s) via Groq Cloud LPU (`qwen/qwen3.8-27b`).")
+
+                sandbox_blocked = any(
+                    "violation" in str(t.get("output_preview", "")).lower() or "prohibited" in str(t.get("output_preview", "")).lower()
+                    for t in response.tool_calls
+                )
+                if sandbox_blocked:
+                    st.warning("🛠️ **Layer 4 (AST Sandbox):** Unauthorized subprocess command contained.")
+                elif response.tool_calls:
+                    st.write(f"🛠️ **Layer 4 (Tool Execution):** Executed {len(response.tool_calls)} verified microservice call(s).")
+
+                if any("guarantee" in v.lower() or "certainty" in v.lower() for v in response.output_shield.get("violations", [])):
+                    st.warning("⚖️ **Layer 5 (Output Shield):** Prohibited certainty claim stripped; statutory FINRA/SEC disclaimers enforced.")
+                else:
+                    st.write(f"⚖️ **Layer 5 (Output Shield):** SEC Form 10-K grounding verified ({int(response.output_shield.get('grounding_score', 1.0) * 100)}%).")
+
+                status.update(label="✅ Analysis & Guardrail Audit Complete!", state="complete", expanded=False)
 
         # Build response metadata
         metadata = {
@@ -341,7 +367,7 @@ if user_query:
             "tool_calls": response.tool_calls,
         }
 
-        # Render Badges
+        # Render Badges (Accurate & Contextual)
         render_guardrail_badges(
             route=response.route,
             ticker=response.ticker,
@@ -349,7 +375,11 @@ if user_query:
             output_shield=response.output_shield,
             total_latency_ms=response.total_latency_ms,
             iterations=response.iterations,
+            tool_calls=response.tool_calls,
         )
+
+        # Render Deep-Dive Defense Analysis Card with Threat Overview
+        render_defense_layer_analysis(metadata)
 
         # Render Tool Call Breakdown
         if response.tool_calls:
