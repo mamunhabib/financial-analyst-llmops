@@ -203,17 +203,19 @@
 - [x] **8.2 `market_gateway/Dockerfile`:** Slim image for Market Gateway microservice (port `:8004`).
 - [x] **8.3 `ui/Dockerfile`:** Lightweight image for Streamlit UI (port `:8501`).
 
-### Phase 9: CI/CD Pipeline & Automated Security Robot (`.github/` & `k8s/apps/`)
+### Phase 9: CI/CD Pipeline & Automated Security Robot (`Jenkinsfile` & `k8s/apps/`)
 - [x] **9.1 Application Deployment Manifests (`k8s/apps/`):**
   - `market-gateway.yaml` (Deployment + ClusterIP `:8004`).
   - `agent-serving.yaml` (Deployment + LoadBalancer `:8091 -> :8000`).
   - `streamlit-ui.yaml` (Deployment + LoadBalancer `:8090 -> :8501`).
   - `security-robot-job.yaml` (Automated Security Testing Runner Job).
-- [x] **9.2 Cloud GitHub Actions Workflow (`.github/workflows/ci_cd.yml`):**
-  - Linting & unit tests (`ruff` + `streamlit.testing.v1.AppTest`).
-  - DeepEval quality benchmark gate (score &ge; 0.90).
-  - Multi-platform Docker builds & push to GHCR (`ghcr.io/mham/financial-analyst-agent:*`).
-  - Rolling update deployment to OrbStack K8s (`kubectl apply -f k8s/apps/`).
+- [x] **9.2 On-Cluster Jenkins CI/CD Pipeline (`Jenkinsfile`):**
+  - Continuous SCM polling (`pollSCM('H/2 * * * *')`) monitoring GitHub repository `mamunhabib/financial-analyst-llmops`.
+  - Code quality checks (`ruff check .`).
+  - Native host Mac Docker builds on Apple Silicon (`linux/arm64`) for `market-gateway`, `agent-serving`, and `streamlit-ui`.
+  - Push to GHCR (`ghcr.io/mamunhabib/...`) using existing Jenkins `github-pat` credentials.
+  - Automatic local cache cleanup (`docker rmi`) to maintain Mac host disk space.
+  - In-cluster automated rolling deployment (`kubectl apply -f k8s/apps/`, rollout restart, and rollout status validation).
 - [x] **9.3 Automated Security Robot Run (`tests/security_robot/`):**
   - Launch Security Robot Runner (`security-robot-job.yaml` & UI sidebar trigger) executing multi-turn adversarial injection and jailbreak attacks against the live agent.
   - Verified 100% defense success rate (10/10 attacks defended, 0% leakage) with full trace audit in **Langfuse** (`:8092`).
