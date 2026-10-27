@@ -10,13 +10,13 @@ FILE ROLE & CALL CHAIN CONTEXT:
 =============================================================================
 """
 
-from src.tools.rag_tool import sec_rag_search, execute_sec_search
-from src.tools.sandbox_tool import run_financial_math, execute_financial_math
 from src.tools.market_tool import (
+    get_company_news,
     get_live_stock_quote,
     get_us_treasury_yield,
-    get_company_news,
 )
+from src.tools.rag_tool import execute_sec_search, sec_rag_search
+from src.tools.sandbox_tool import execute_financial_math, run_financial_math
 
 # Complete registry of tools provided to the ReAct agent
 ALL_FINANCIAL_TOOLS = [

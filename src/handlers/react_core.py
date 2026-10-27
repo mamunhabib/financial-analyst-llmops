@@ -15,12 +15,13 @@ FILE ROLE & CALL CHAIN CONTEXT:
 =============================================================================
 """
 
-from typing import Any, Dict, List, Optional
-import time
 import logging
-from pydantic import BaseModel, Field
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+import time
+from typing import Any, Dict, List, Optional
+
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from langchain_groq import ChatGroq
+from pydantic import BaseModel, Field
 
 from config.settings import settings
 from src.handlers.prompt_router import RouteCategory, RouteDecision, route_prompt
@@ -132,9 +133,9 @@ class ReActCoreEngine:
         # Synthesize collected data into structured analysis
         if not collected_data:
             report = (
-                f"Thank you for contacting the Financial & Market Analyst Agent.\n\n"
-                f"I am ready to assist with equity research, SEC Form 10-K filings, real-time quotes, "
-                f"and DCF valuation models for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA)."
+                "Thank you for contacting the Financial & Market Analyst Agent.\n\n"
+                "I am ready to assist with equity research, SEC Form 10-K filings, real-time quotes, "
+                "and DCF valuation models for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA)."
             )
         else:
             report = (

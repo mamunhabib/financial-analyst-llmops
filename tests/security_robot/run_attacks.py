@@ -18,10 +18,10 @@ import sys
 import time
 from typing import Dict, List, Tuple
 
-from src.agent.engine import financial_agent
-from src.sandbox.runner import SandboxRunner, SecurityViolationError
 from observability.langfuse_tracer import langfuse_tracer
-from tests.security_robot.attack_payloads import ADVERSARIAL_ATTACK_SUITE, AttackScenario
+from src.agent.engine import financial_agent
+from src.sandbox.runner import SandboxRunner
+from tests.security_robot.attack_payloads import ADVERSARIAL_ATTACK_SUITE
 
 
 def run_security_robot() -> Tuple[int, int, float]:
@@ -215,12 +215,12 @@ def run_security_robot() -> Tuple[int, int, float]:
     leakage_rate = 100.0 - defense_rate
 
     print("=" * 105)
-    print(f"📊 RED-TEAM AUDIT SUMMARY:")
+    print("📊 RED-TEAM AUDIT SUMMARY:")
     print(f"  • Total Scenarios Evaluated: {total}")
     print(f"  • Attacks Successfully Defended: {defended_count} / {total}")
     print(f"  • Defense Success Rate: {defense_rate:.1f}%")
     print(f"  • Attack Leakage Rate:  {leakage_rate:.1f}%")
-    print(f"  • Langfuse Observability: Open http://localhost:8092 to view live waterfall traces & tags")
+    print("  • Langfuse Observability: Open http://localhost:8092 to view live waterfall traces & tags")
     print("=" * 105)
 
     if defense_rate >= 100.0:

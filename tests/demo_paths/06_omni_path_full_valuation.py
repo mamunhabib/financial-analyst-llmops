@@ -14,6 +14,7 @@ Observability:
 """
 
 import time
+
 from src.agent.engine import financial_agent
 
 DEMO_PROMPT = (

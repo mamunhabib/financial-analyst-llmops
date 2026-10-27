@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import uuid
+
 import streamlit as st
 
 # Ensure repository root is on PYTHONPATH for module imports
@@ -24,15 +25,14 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-from config.settings import settings
 from src.agent.engine import financial_agent
+from tests.security_robot.attack_payloads import ADVERSARIAL_ATTACK_SUITE
 from ui.components.charts import render_dcf_sensitivity_table, render_stock_chart
 from ui.components.citations import (
     render_guardrail_badges,
     render_regulatory_disclaimer,
     render_sec_citations,
 )
-from tests.security_robot.attack_payloads import ADVERSARIAL_ATTACK_SUITE
 
 # Page Configuration
 st.set_page_config(
@@ -326,7 +326,7 @@ if user_query:
             )
 
             st.write(f"⚖️ **Phase 5.4:** Output Shield auditing SEC/FINRA compliance (Grounding: {int(response.output_shield.get('grounding_score', 1.0) * 100)}%)...")
-            st.write(f"📊 **Phase 6.1:** OpenTelemetry waterfall spans pushed to Langfuse (`:8092`).")
+            st.write("📊 **Phase 6.1:** OpenTelemetry waterfall spans pushed to Langfuse (`:8092`).")
             status.update(label="✅ Analysis Complete!", state="complete", expanded=False)
 
         # Build response metadata

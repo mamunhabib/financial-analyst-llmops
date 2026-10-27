@@ -15,9 +15,8 @@ import logging
 import re
 import time
 from typing import List, Optional, Tuple
-from pydantic import BaseModel, Field
 
-from config.settings import settings
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("OutputShield")
 

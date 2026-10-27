@@ -13,11 +13,11 @@ FILE ROLE & CALL CHAIN CONTEXT:
 =============================================================================
 """
 
-from typing import Any, Dict, List, Optional
-import os
-import sys
 import logging
+import sys
 from pathlib import Path
+from typing import Any, Dict, List
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 

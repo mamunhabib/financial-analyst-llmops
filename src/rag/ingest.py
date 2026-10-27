@@ -4,12 +4,11 @@ Parses, chunks, embeds, and indexes SEC 10-K annual reports (Apple, Microsoft, N
 into the Upstash Vector database for RAG retrieval with metadata filtering.
 """
 
-from typing import Any, Dict, List, Tuple
-import os
+import logging
 import re
 import sys
-import logging
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 # Ensure project root is in sys.path so 'src' and 'config' can be imported
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

@@ -14,6 +14,7 @@ Observability:
 """
 
 import time
+
 from src.agent.engine import financial_agent
 
 DEMO_PROMPT = "Calculate the Weighted Average Cost of Capital (WACC) where Equity value is 800.0, Debt value is 200.0, Cost of Equity is 0.10, Cost of Debt is 0.05, and Corporate Tax Rate is 0.21."
@@ -41,7 +42,7 @@ def main():
     print(f"  • Tools Executed:      {len(response.tool_calls)} Sandbox Tool(s)")
     for t in response.tool_calls:
         print(f"      ➔ [{t.get('tool')}] — Output preview: {str(t.get('output_preview', ''))[:80]}...")
-    print(f"  • Tools Pruned/Skipped: SEC 10-K RAG (0 vectors), Live Feeds (0 calls)")
+    print("  • Tools Pruned/Skipped: SEC 10-K RAG (0 vectors), Live Feeds (0 calls)")
     print(f"  • Input Shield:        Passed={response.input_shield.get('passed')}")
     print(f"  • Output Shield:       Passed={response.output_shield.get('passed')}")
     print(f"  • Total Latency:       {round(latency_ms, 1)}ms")

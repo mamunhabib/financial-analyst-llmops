@@ -36,7 +36,7 @@ jobs:
 
       - name: Code Quality & Lint Check (Ruff)
         run: |
-          ruff check . --ignore E501
+          ruff check .
 
       - name: Headless Streamlit UI Verification
         run: |
@@ -58,6 +58,7 @@ jobs:
           "
 
       - name: DeepEval Automated Quality Benchmark Gate
+        if: env.GROQ_API_KEY != ''
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}

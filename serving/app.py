@@ -16,10 +16,11 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional
-from fastapi import FastAPI, HTTPException, Query, Request
+from typing import AsyncGenerator, List, Optional
+
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from config.settings import settings
@@ -159,7 +160,7 @@ async def sse_event_generator(query: str, session_id: Optional[str]) -> AsyncGen
 
     # Stream final response in chunks for typing effect in UI
     yield f"data: {json.dumps({'type': 'status', 'message': '⚖️ Output Shield: SEC/FINRA compliance verified.'})}\n\n"
-    
+
     words = response.response.split(" ")
     chunk_size = 8
     for i in range(0, len(words), chunk_size):

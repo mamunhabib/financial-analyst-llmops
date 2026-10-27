@@ -14,6 +14,7 @@ Observability:
 """
 
 import time
+
 from src.agent.engine import financial_agent
 
 DEMO_PROMPT = "What is Microsoft current stock price, today price change, and the current yield on the US 10-Year Treasury?"
@@ -41,7 +42,7 @@ def main():
     print(f"  • Tools Executed:      {len(response.tool_calls)} Market Tool(s)")
     for t in response.tool_calls:
         print(f"      ➔ [{t.get('tool')}] — Output preview: {str(t.get('output_preview', ''))[:80]}...")
-    print(f"  • Tools Pruned/Skipped: SEC 10-K RAG (0 vectors fetched), AST Sandbox (0 formulas run)")
+    print("  • Tools Pruned/Skipped: SEC 10-K RAG (0 vectors fetched), AST Sandbox (0 formulas run)")
     print(f"  • Input Shield:        Passed={response.input_shield.get('passed')}")
     print(f"  • Output Shield:       Passed={response.output_shield.get('passed')} (Grounding Score={response.output_shield.get('grounding_score')})")
     print(f"  • Total Latency:       {round(latency_ms, 1)}ms")

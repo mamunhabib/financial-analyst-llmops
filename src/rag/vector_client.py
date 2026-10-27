@@ -12,8 +12,9 @@ FILE ROLE & CALL CHAIN CONTEXT:
 =============================================================================
 """
 
-from typing import Any, Dict, List, Optional, Union
 import logging
+from typing import Any, Dict, List, Optional, Union
+
 from upstash_vector import Index, Vector
 
 from config.settings import settings

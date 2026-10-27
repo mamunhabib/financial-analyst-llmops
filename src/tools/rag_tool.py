@@ -15,8 +15,9 @@ FILE ROLE & CALL CHAIN CONTEXT:
 =============================================================================
 """
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Optional
+
 from langchain_core.tools import tool
 
 from src.rag.vector_client import UpstashVectorClient

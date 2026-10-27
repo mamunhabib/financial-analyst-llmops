@@ -8,6 +8,12 @@ Hosts the 4 core pipeline handlers:
 """
 
 from src.handlers.input_shield import InputShield, ShieldResult, input_shield, validate_input
+from src.handlers.output_shield import (
+    AuditResult,
+    OutputShield,
+    audit_output,
+    output_shield,
+)
 from src.handlers.prompt_router import (
     PromptRouter,
     RouteCategory,
@@ -20,13 +26,6 @@ from src.handlers.react_core import (
     ReActResult,
     react_core,
     run_analyst_agent,
-)
-
-from src.handlers.output_shield import (
-    AuditResult,
-    OutputShield,
-    audit_output,
-    output_shield,
 )
 
 __all__ = [

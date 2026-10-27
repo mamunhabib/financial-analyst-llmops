@@ -15,6 +15,7 @@ Dependencies:
 import sys
 import time
 from typing import Dict, List
+
 from config.settings import settings
 from src.agent.engine import financial_agent
 

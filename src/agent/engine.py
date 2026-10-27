@@ -17,14 +17,15 @@ import logging
 import time
 import uuid
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
+from observability.langfuse_tracer import langfuse_tracer
 from src.agent.memory import RedisMemoryClient, memory_client
 from src.handlers.input_shield import InputShield, ShieldResult, input_shield
 from src.handlers.output_shield import AuditResult, OutputShield, output_shield
 from src.handlers.prompt_router import PromptRouter, RouteDecision, prompt_router
 from src.handlers.react_core import ReActCoreEngine, ReActResult, react_core
-from observability.langfuse_tracer import langfuse_tracer
 
 logger = logging.getLogger("FinancialAnalystEngine")
 

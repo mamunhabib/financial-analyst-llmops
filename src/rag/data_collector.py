@@ -6,13 +6,13 @@ extracts substantive analytical sections (Item 1 Business, Item 1A Risk Factors,
 Item 7 MD&A), and saves structured Markdown files in data/sec_filings/ for RAG vectorization.
 """
 
-from typing import Dict, List, Optional, Tuple
-import os
+import logging
 import re
 import sys
 import time
-import logging
 from pathlib import Path
+from typing import Dict
+
 import httpx
 
 # Ensure project root is in sys.path
@@ -181,7 +181,7 @@ class SECDataCollector:
         md_lines = [
             f"# {comp['name']} ({ticker}) — Form 10-K (Annual Report)",
             f"**Fiscal Year Ended:** {year}",
-            f"**Source:** U.S. Securities and Exchange Commission (SEC EDGAR)",
+            "**Source:** U.S. Securities and Exchange Commission (SEC EDGAR)",
             "\n---\n",
         ]
 

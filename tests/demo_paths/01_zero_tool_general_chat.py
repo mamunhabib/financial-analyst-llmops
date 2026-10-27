@@ -14,6 +14,7 @@ Observability:
 """
 
 import time
+
 from src.agent.engine import financial_agent
 
 DEMO_PROMPT = "Hello! Who are you and what financial analysis capabilities can you provide for institutional investors?"

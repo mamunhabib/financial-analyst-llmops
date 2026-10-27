@@ -4,9 +4,10 @@ Provides 384-dimensional dense vectors for Upstash Vector RAG indexing and searc
 Uses fastembed (BAAI/bge-small-en-v1.5 ONNX) with automatic Hugging Face fallback.
 """
 
-from typing import List, Union
 import logging
 import time
+from typing import List, Union
+
 import httpx
 import numpy as np
 
