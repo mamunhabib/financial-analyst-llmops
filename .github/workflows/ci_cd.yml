@@ -87,6 +87,9 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -104,6 +107,7 @@ jobs:
           context: .
           file: ./market_gateway/Dockerfile
           push: true
+          platforms: linux/arm64,linux/amd64
           tags: ${{ env.IMAGE_PREFIX }}/market-gateway:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -115,6 +119,7 @@ jobs:
           context: .
           file: ./serving/Dockerfile
           push: true
+          platforms: linux/arm64,linux/amd64
           tags: ${{ env.IMAGE_PREFIX }}/agent-serving:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -126,6 +131,7 @@ jobs:
           context: .
           file: ./ui/Dockerfile
           push: true
+          platforms: linux/arm64,linux/amd64
           tags: ${{ env.IMAGE_PREFIX }}/streamlit-ui:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -145,6 +151,7 @@ jobs:
 
       - name: Automated Rolling Update (GitOps)
         run: |
+          kubectl delete job security-robot-runner -n financial-agent --ignore-not-found
           kubectl apply -f k8s/apps/ -n financial-agent
           kubectl rollout restart deployment/market-gateway -n financial-agent
           kubectl rollout restart deployment/agent-serving -n financial-agent
