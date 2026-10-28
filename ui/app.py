@@ -279,6 +279,8 @@ if st.session_state.get("run_all_active"):
             resp = financial_agent.process_query(
                 query=scenario.prompt,
                 session_id=f"audit-{scenario.id.lower()}",
+                is_attack=(scenario.category != "BENIGN_CONTROL"),
+                attack_scenario=scenario.dict(),
             )
             latency_val = resp.total_latency_ms
 

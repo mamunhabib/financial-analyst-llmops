@@ -73,6 +73,8 @@ class FinancialAnalystEngine:
         self,
         query: str,
         session_id: Optional[str] = None,
+        is_attack: bool = False,
+        attack_scenario: Optional[Dict[str, Any]] = None,
     ) -> AgentResponse:
         """
         Executes the full defense-in-depth financial analyst pipeline.
@@ -132,6 +134,8 @@ class FinancialAnalystEngine:
                     "input_shield": input_meta,
                     "total_latency_ms": round(latency, 2),
                 },
+                is_attack=is_attack,
+                attack_scenario=attack_scenario,
             )
 
             return AgentResponse(
@@ -174,6 +178,8 @@ class FinancialAnalystEngine:
                     "violations": [violation_name],
                     "total_latency_ms": round(latency, 2),
                 },
+                is_attack=is_attack,
+                attack_scenario=attack_scenario,
             )
 
             return AgentResponse(
@@ -255,8 +261,11 @@ class FinancialAnalystEngine:
                 "iterations": react_result.iterations,
                 "input_shield": input_meta,
                 "output_shield": output_meta,
+                "token_usage": getattr(react_result, "token_usage", {}),
                 "total_latency_ms": round(total_latency, 2),
             },
+            is_attack=is_attack,
+            attack_scenario=attack_scenario,
         )
 
         return AgentResponse(

@@ -54,6 +54,7 @@ class ReActResult(BaseModel):
     tool_calls_executed: List[Dict[str, Any]] = Field(default_factory=list, description="Audit trace of tools called")
     iterations: int = Field(default=1, description="Number of Thought-Action-Observation cycles")
     total_latency_ms: float = Field(default=0.0, description="Total execution duration in ms")
+    token_usage: Dict[str, Any] = Field(default_factory=dict, description="LLM token usage breakdown")
 
 
 class ReActCoreEngine:
@@ -150,6 +151,8 @@ class ReActCoreEngine:
             )
 
         latency = (time.perf_counter() - start_time) * 1000.0
+        approx_in = max(15, len(query.split()) * 2)
+        approx_out = max(25, len(report.split()) * 2)
         return ReActResult(
             content=report,
             route=route_decision.route.value,
@@ -157,6 +160,7 @@ class ReActCoreEngine:
             tool_calls_executed=tools_executed,
             iterations=1,
             total_latency_ms=round(latency, 2),
+            token_usage={"input": approx_in, "output": approx_out, "total": approx_in + approx_out, "unit": "TOKENS"},
         )
 
     def analyze(
@@ -214,6 +218,16 @@ class ReActCoreEngine:
                     )
 
             latency = (time.perf_counter() - start_time) * 1000.0
+            usage_dict = {}
+            if "resp" in locals() and hasattr(resp, "response_metadata"):
+                raw_u = resp.response_metadata.get("token_usage", {})
+                if raw_u:
+                    usage_dict = {"input": raw_u.get("prompt_tokens", 0), "output": raw_u.get("completion_tokens", 0), "total": raw_u.get("total_tokens", 0), "unit": "TOKENS"}
+            if not usage_dict:
+                approx_in = max(10, len(query.split()) * 2)
+                approx_out = max(20, len(content.split()) * 2)
+                usage_dict = {"input": approx_in, "output": approx_out, "total": approx_in + approx_out, "unit": "TOKENS"}
+
             return ReActResult(
                 content=content,
                 route=route_decision.route.value,
@@ -221,6 +235,7 @@ class ReActCoreEngine:
                 tool_calls_executed=[],
                 iterations=1,
                 total_latency_ms=round(latency, 2),
+                token_usage=usage_dict,
             )
 
         # Initialize LPU model
@@ -248,6 +263,16 @@ class ReActCoreEngine:
                 if not response.tool_calls:
                     # Final synthesis reached!
                     latency = (time.perf_counter() - start_time) * 1000.0
+                    usage_dict = {}
+                    if hasattr(response, "response_metadata"):
+                        raw_u = response.response_metadata.get("token_usage", {})
+                        if raw_u:
+                            usage_dict = {"input": raw_u.get("prompt_tokens", 0), "output": raw_u.get("completion_tokens", 0), "total": raw_u.get("total_tokens", 0), "unit": "TOKENS"}
+                    if not usage_dict:
+                        approx_in = max(20, len(query.split()) * 2)
+                        approx_out = max(30, len(response.content.split()) * 2)
+                        usage_dict = {"input": approx_in, "output": approx_out, "total": approx_in + approx_out, "unit": "TOKENS"}
+
                     return ReActResult(
                         content=response.content,
                         route=route_decision.route.value,
@@ -255,6 +280,7 @@ class ReActCoreEngine:
                         tool_calls_executed=tools_executed,
                         iterations=iteration,
                         total_latency_ms=round(latency, 2),
+                        token_usage=usage_dict,
                     )
 
                 # Append AI response containing tool call intent
