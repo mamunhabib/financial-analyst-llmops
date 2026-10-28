@@ -20,7 +20,7 @@ from plotly.subplots import make_subplots
 
 def render_stock_chart(ticker: str, prices: Optional[List[float]] = None, dates: Optional[List[str]] = None) -> go.Figure:
     """
-    Renders an institutional-grade dark-themed price trend and volume chart.
+    Renders a dark-themed price trend and volume chart.
     If historical series is not provided, generates realistic synthetic trend data for the ticker.
     """
     if not prices or len(prices) < 5:

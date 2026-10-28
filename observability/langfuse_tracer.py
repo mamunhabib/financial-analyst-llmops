@@ -77,34 +77,59 @@ class LangfuseTracer:
 
         try:
             # Determine if this trace is an adversarial attack or security incident
-            is_security_threat = is_attack or (response_data.get("route") == "SECURITY_REJECTED") or not response_data.get("input_shield", {}).get("passed", True)
+            is_policy_blocked = response_data.get("route") == "POLICY_BLOCKED" or bool(response_data.get("violations"))
+            is_security_threat = (
+                is_attack
+                or (response_data.get("route") in ("SECURITY_REJECTED", "POLICY_BLOCKED"))
+                or not response_data.get("input_shield", {}).get("passed", True)
+                or is_policy_blocked
+            )
 
             if is_security_threat:
                 # Unify trace name so the Langfuse "Traces" box remains clean and separated
                 trace_name = "🚨 Adversarial Security Attacks"
 
                 category = "PERIMETER"
+                group = "INGRESS_PRIVACY"
+                defense_layer = "Layer 1: Perimeter Shield"
                 test_id = "ATTACK"
                 test_name = "Adversarial Probe"
+
                 if attack_scenario:
                     category = attack_scenario.get("category", "UNKNOWN")
+                    group = attack_scenario.get("category_group", "SECURITY")
+                    defense_layer = attack_scenario.get("defense_layer", "Layer 1: Perimeter Shield")
                     test_id = attack_scenario.get("id", "ATTACK")
                     test_name = attack_scenario.get("name", "Adversarial Probe")
+                elif is_policy_blocked:
+                    category = "POLICY"
+                    group = "POLICY_COMPLIANCE"
+                    defense_layer = "Layer 5: Policy & Compliance Shield"
+                    violations = response_data.get("violations") or response_data.get("output_shield", {}).get("violations", [])
+                    test_id = violations[0] if violations else "STATUTORY_VIOLATION"
+                    test_name = "Statutory Regulatory Refusal"
                 elif response_data.get("input_shield", {}).get("threat_type"):
                     category = "PERIMETER"
+                    group = "INGRESS_PRIVACY"
+                    defense_layer = "Layer 1: Perimeter Shield"
                     test_id = response_data.get("input_shield", {}).get("threat_type")
                     test_name = "Ingress Threat Interception"
 
-                passed_defense = response_data.get("input_shield", {}).get("passed") is False or \
-                                 response_data.get("route") == "SECURITY_REJECTED" or \
-                                 "COMPLIANCE NOTE" in response_data.get("response", "") or \
-                                 "[REDACTED_" in response_data.get("response", "") or \
-                                 response_data.get("route") == "SANDBOX_INTERCEPTED"
+                passed_defense = (
+                    response_data.get("input_shield", {}).get("passed") is False
+                    or response_data.get("route") in ("SECURITY_REJECTED", "POLICY_BLOCKED")
+                    or "COMPLIANCE NOTE" in response_data.get("response", "")
+                    or "[REDACTED_" in response_data.get("response", "")
+                    or response_data.get("route") == "SANDBOX_INTERCEPTED"
+                    or is_policy_blocked
+                )
 
                 status_tag = "status:DEFENDED" if passed_defense else "status:BREACHED"
                 tags = [
                     "🚨 ADVERSARIAL_ATTACK",
-                    f"layer:{category}",
+                    f"group:{group}",
+                    f"layer:{defense_layer}",
+                    f"category:{category}",
                     f"id:{test_id}",
                     status_tag,
                 ]
@@ -112,6 +137,8 @@ class LangfuseTracer:
                 trace_name = "FinancialAnalystPipeline"
                 tags = [
                     "production-query",
+                    "group:FACT_HALLUCINATION",
+                    "layer:Layer 3: Core Reasoning Engine",
                     f"route:{response_data.get('route', 'UNKNOWN')}",
                     f"ticker:{response_data.get('ticker') or 'NONE'}",
                 ]
@@ -127,7 +154,8 @@ class LangfuseTracer:
                     "is_attack": is_security_threat,
                     "attack_id": test_id if is_security_threat else None,
                     "attack_name": test_name if is_security_threat else None,
-                    "target_layer": category if is_security_threat else None,
+                    "target_layer": defense_layer if is_security_threat else "Layer 3: Core Reasoning Engine",
+                    "category_group": group if is_security_threat else "FACT_HALLUCINATION",
                     "route": response_data.get("route"),
                     "ticker": response_data.get("ticker"),
                     "total_latency_ms": response_data.get("total_latency_ms"),
@@ -142,8 +170,35 @@ class LangfuseTracer:
                     status_message=f"Adversarial security attack intercepted: {test_name}",
                     input={"payload": query},
                     output={"verdict": "DEFENDED" if passed_defense else "BREACHED"},
-                    metadata={"category": category, "test_id": test_id, "threat_name": test_name},
+                    metadata={"category": category, "test_id": test_id, "threat_name": test_name, "group": group, "defense_layer": defense_layer},
                 )
+
+            # Case: Intercepted by Layer 5 Policy Pre-Filter
+            if response_data.get("route") == "POLICY_BLOCKED":
+                span_policy = trace.span(
+                    name="Handler 4: Policy & Compliance Shield (SEC Rule 10b-5 / § 9(a)(2))",
+                    input={"query": query},
+                    output={
+                        "refusal": response_data.get("response", ""),
+                        "violations": response_data.get("violations", []),
+                    },
+                    level="ERROR",
+                    status_message=f"Statutory Refusal: {test_id}",
+                    metadata={"defense_layer": "Layer 5: Policy & Compliance Shield", "category_group": "POLICY_COMPLIANCE"},
+                )
+                span_policy.end()
+                trace.score(
+                    name="security_defense_success",
+                    value=1.0,
+                    comment="Statutory policy violation intercepted by Layer 5; 0 Groq tokens consumed.",
+                )
+                trace.score(
+                    name="security_attacks_defended",
+                    value=1.0,
+                    comment="Dedicated defense metric for security scorecard widget.",
+                )
+                self._client.flush()
+                return trace.id
 
             # 2. Span 1: Input Shield
             input_shield_meta = response_data.get("input_shield", {})

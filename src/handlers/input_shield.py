@@ -44,6 +44,7 @@ INJECTION_SIGNATURES: List[Tuple[str, re.Pattern, float]] = [
     ("DELIMITER_HIJACK", re.compile(r"(?:<\|im_start\|>|<\|im_end\|>|###\s*system|###\s*instruction|\[SYSTEM_PROMPT\]|===\s*(?:END|START|SYSTEM|CONTEXT)[^=\n]*===|---\s*(?:END|START|SYSTEM)[^-\n]*---)", re.IGNORECASE), 0.90),
     ("BASE64_OBFUSCATION", re.compile(r"(?:decode|execute|run)\s+(?:this\s+)?base64", re.IGNORECASE), 0.70),
     ("SIMULATED_ADMIN", re.compile(r"(?:sudo|chmod|rm\s+-rf|format\s+drive|cat\s+/etc/passwd|api[_-]key\s*leak|root\s+password)", re.IGNORECASE), 0.85),
+    ("CREDENTIAL_PROBE", re.compile(r"(?:api[_-]?key|secret|password|token|redis_rest_url|groq_api_key|backend_url).*?(?:echo|print|show|reveal|what\s+is|tell\s+me)|(?:what\s+is\s+your\s+backend\s+[a-z0-9_-]+)", re.IGNORECASE), 0.90),
 ]
 
 

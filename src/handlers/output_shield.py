@@ -47,6 +47,44 @@ CREDENTIAL_LEAK_PATTERNS = [
     (r"\b[A-Za-z0-9+/]{40,}={0,2}\b", "BASE64_TOKEN"),
 ]
 
+# Layer 5 Statutory Policy Ingress Boundary Rules (SEC Rule 10b-5 & Exchange Act § 9(a)(2))
+STATUTORY_POLICY_RULES = [
+    (
+        "INSIDER_TRADING_PROHIBITION",
+        re.compile(
+            r"(?:confidential|non-public|unannounced|board\s+member|internal\s+memo|leak(?:ed)?)\s+.*?(?:earnings|revenue|numbers|merger|acquisition|takeover)"
+            r"|(?:insider\s+trading|trade\s+on\s+insider|execute\s+buy\s+orders?\s+before\s+.*market\s+open)",
+            re.IGNORECASE,
+        ),
+        (
+            "### ⚖️ Regulatory Policy Violation: SEC Rule 10b-5 (Prohibition of Insider Trading)\n\n"
+            "This autonomous financial agent strictly refuses to provide investment advice, order execution recommendations, "
+            "or trading strategies based on Material Non-Public Information (MNPI) or confidential corporate disclosures.\n\n"
+            "• **Statutory Authority:** Securities Exchange Act of 1934 § 10(b) and SEC Rule 10b-5.\n"
+            "• **Violation Identified:** Solicitation of trading recommendations based on non-public, confidential corporate disclosures.\n"
+            "• **Action Taken:** Immediate statutory policy block by **Layer 5: Policy & Compliance Shield** (0 Groq LLM tokens consumed).\n\n"
+            "Trading securities on the basis of material non-public information carries severe civil liability, "
+            "substantial financial penalties, and federal criminal sanctions."
+        ),
+    ),
+    (
+        "MARKET_MANIPULATION_PROHIBITION",
+        re.compile(
+            r"(?:pump\s+and\s+dump|artificially\s+pump|short\s+squeeze|viral\s+social\s+media\s+campaign|penny\s+stock\s+.*pump)",
+            re.IGNORECASE,
+        ),
+        (
+            "### ⚖️ Regulatory Policy Violation: Market Manipulation & Securities Exchange Act § 9(a)(2)\n\n"
+            "This autonomous financial agent strictly refuses requests to coordinate viral social media campaigns, "
+            "artificially inflate trading volumes, or orchestrate short squeezes.\n\n"
+            "• **Statutory Authority:** Securities Exchange Act of 1934 § 9(a)(2) and FINRA Rule 2010 (Standards of Commercial Honor).\n"
+            "• **Violation Identified:** Coordinated volume distortion and artificial price manipulation campaign.\n"
+            "• **Action Taken:** Immediate statutory policy block by **Layer 5: Policy & Compliance Shield** (0 Groq LLM tokens consumed).\n\n"
+            "Orchestrating deceptive promotional schemes to manipulate securities prices is illegal and subject to SEC enforcement action."
+        ),
+    ),
+]
+
 
 class AuditResult(BaseModel):
     """Structured audit validation result from Output Shield."""
@@ -73,6 +111,20 @@ class OutputShield:
         self.credential_patterns = [
             (re.compile(pat), name) for pat, name in CREDENTIAL_LEAK_PATTERNS
         ]
+
+    def check_ingress_policy(self, text: str) -> Optional[Tuple[str, str]]:
+        """
+        Layer 5 Ingress Policy Gate:
+        Detects statutory SEC Rule 10b-5 and Market Manipulation solicitations in ingress prompts
+        and rejects them immediately without consuming LLM tokens.
+
+        Returns:
+            Tuple of (violation_name, refusal_text) if violated, else None.
+        """
+        for violation_name, pattern, refusal_text in STATUTORY_POLICY_RULES:
+            if pattern.search(text):
+                return violation_name, refusal_text
+        return None
 
     def _scrub_credentials(self, text: str) -> Tuple[str, bool]:
         """Redacts accidental credential leaks from synthesized text."""

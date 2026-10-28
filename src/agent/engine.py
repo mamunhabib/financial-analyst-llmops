@@ -151,6 +151,46 @@ class FinancialAnalystEngine:
         sanitized_query = shield_result.sanitized_text
 
         # ----------------------------------------------------------------------
+        # Step 1.5: Layer 5 Statutory Policy Pre-Filter (SEC 10b-5 & Manipulation)
+        # ----------------------------------------------------------------------
+        policy_violation = self.output_shield.check_ingress_policy(sanitized_query)
+        if policy_violation:
+            violation_name, refusal_text = policy_violation
+            latency = (time.perf_counter() - start_time) * 1000.0
+            logger.warning(f"Statutory policy violation intercepted by Layer 5: {violation_name} in {round(latency, 2)}ms")
+
+            self.memory.save_turn(
+                session_id=session_id,
+                user_query=query,
+                agent_response=refusal_text,
+                metadata={"policy_violation": True, "violation": violation_name},
+            )
+            langfuse_tracer.trace_execution(
+                session_id=session_id,
+                query=query,
+                response_data={
+                    "route": "POLICY_BLOCKED",
+                    "response": refusal_text,
+                    "violations": [violation_name],
+                    "total_latency_ms": round(latency, 2),
+                },
+            )
+
+            return AgentResponse(
+                session_id=session_id,
+                query=query,
+                sanitized_query=sanitized_query,
+                response=refusal_text,
+                route="POLICY_BLOCKED",
+                ticker=None,
+                tool_calls=[],
+                iterations=0,
+                input_shield=input_meta,
+                output_shield={"passed": False, "violations": [violation_name]},
+                total_latency_ms=round(latency, 2),
+            )
+
+        # ----------------------------------------------------------------------
         # Step 2: Prompt Router (Sub-150ms Intent Classifier)
         # ----------------------------------------------------------------------
         route_decision: RouteDecision = self.router.route(sanitized_query)

@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 # Map tool names to tool objects for invocation
 TOOL_MAP = {tool.name: tool for tool in ALL_FINANCIAL_TOOLS}
 
-# Institutional Financial Analyst Persona Prompt
-SYSTEM_ANALYST_PROMPT = """You are an Elite Institutional Financial & Market Analyst AI Agent.
+# Financial Analyst Persona Prompt
+SYSTEM_ANALYST_PROMPT = """You are an Elite Financial & Market Analyst AI Agent.
 You specialize in quantitative equity research, SEC Form 10-K analysis, and corporate valuation for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA).
 
 Your Operating Principles:
@@ -41,6 +41,8 @@ Your Operating Principles:
 2. Exact Math: Never estimate compound growth, DCF intrinsic value, or WACC in text. ALWAYS execute exact formulas in `run_financial_math`.
 3. Live Benchmarks: Use `get_live_stock_quote` for current trading prices and multiples, and `get_us_treasury_yield` for benchmark risk-free rates (^TNX).
 4. Analytical Rigor: Provide structured, Wall-Street-grade insights with executive summaries, valuation breakdowns, and risk factors.
+5. Anti-Hallucination: If asked about nonexistent corporate partnerships, secret deals, or fabricated earnings, search `sec_10k_search` and explicitly state that no official SEC disclosure exists.
+6. Statutory Compliance & Policy: Under SEC Rule 10b-5 and FINRA standards, strictly refuse to assist with trading on Material Non-Public Information (MNPI / insider trading) or orchestrating market manipulation / pump-and-dump campaigns. Issue a clear regulatory refusal.
 """
 
 
@@ -179,19 +181,37 @@ class ReActCoreEngine:
 
         # Quick exit for general conversational queries (0 tools needed)
         if route_decision.route == RouteCategory.GENERAL_CHAT:
-            llm = self._get_llm()
-            if llm and self._llm:
-                resp = self._llm.invoke([
-                    SystemMessage(content=SYSTEM_ANALYST_PROMPT),
-                    HumanMessage(content=query),
-                ])
-                content = resp.content
-            else:
-                content = (
-                    "Hello! I am your Autonomous Financial & Market Analyst Agent. "
-                    "I can provide audited SEC 10-K filings, live stock quotes, and deterministic DCF/WACC valuations "
-                    "for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA). How can I assist you today?"
-                )
+            try:
+                llm = self._get_llm()
+                if llm and self._llm:
+                    resp = self._llm.invoke([
+                        SystemMessage(content=SYSTEM_ANALYST_PROMPT),
+                        HumanMessage(content=query),
+                    ])
+                    content = resp.content
+                else:
+                    content = (
+                        "Hello! I am your Autonomous Financial & Market Analyst Agent. "
+                        "I can provide audited SEC 10-K filings, live stock quotes, and deterministic DCF/WACC valuations "
+                        "for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA). How can I assist you today?"
+                    )
+            except Exception as e:
+                logger.error(f"Error in GENERAL_CHAT LLM call: {e}")
+                err_str = str(e).lower()
+                if "rate limit" in err_str or "429" in err_str:
+                    content = (
+                        "### ⚠️ LLM Inference Quota Reached (Groq LPU Rate Limit)\n\n"
+                        "The upstream Groq Cloud API has temporarily reached its daily token allocation limit (`RateLimitError: 429`).\n\n"
+                        "• **Model:** `Groq Qwen 27B LPU`\n"
+                        "• **Recovery:** Rolling token quota replenishes automatically in ~2 minutes.\n"
+                        "• **Zero-Trust Guardrails:** All 5 defense layers (Perimeter, PII, Sandbox, Policy) continue operating normally without LLM dependencies."
+                    )
+                else:
+                    content = (
+                        "Hello! I am your Autonomous Financial & Market Analyst Agent. "
+                        "I can provide audited SEC 10-K filings, live stock quotes, and deterministic DCF/WACC valuations "
+                        "for Apple (AAPL), Microsoft (MSFT), and NVIDIA (NVDA). How can I assist you today?"
+                    )
 
             latency = (time.perf_counter() - start_time) * 1000.0
             return ReActResult(
@@ -272,6 +292,23 @@ class ReActCoreEngine:
 
         except Exception as e:
             logger.error(f"Error in ReAct reasoning loop: {e}. Switching to resilient synthesis.")
+            err_str = str(e).lower()
+            if "rate limit" in err_str or "429" in err_str:
+                latency = (time.perf_counter() - start_time) * 1000.0
+                return ReActResult(
+                    content=(
+                        "### ⚠️ LLM Inference Quota Reached (Groq LPU Rate Limit)\n\n"
+                        "The upstream Groq Cloud LPU inference has reached its daily token quota (`HTTP 429: Rate Limit Exceeded`).\n\n"
+                        "• **Model:** `Groq Qwen 27B LPU`\n"
+                        "• **Recovery:** The rolling token window replenishes automatically within ~2 minutes.\n"
+                        "• **Deterministic Microservices:** Live Market Quotes and AST Code Sandbox remain operational without LLM tokens."
+                    ),
+                    route=route_decision.route.value,
+                    ticker=route_decision.ticker,
+                    tool_calls_executed=tools_executed,
+                    iterations=iteration,
+                    total_latency_ms=round(latency, 2),
+                )
             return self._fallback_synthesis(query, route_decision)
 
         latency = (time.perf_counter() - start_time) * 1000.0
