@@ -13,10 +13,15 @@ Dependencies:
     - config.settings: Application configuration.
 """
 
+import logging
 import os
 import sys
 import time
 import uuid
+
+# Configure logging to ensure INFO logs reach container stdout and Filebeat
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logger = logging.getLogger("StreamlitUI")
 
 import streamlit as st
 
@@ -333,6 +338,7 @@ if user_query:
     # 2. Process Agent Pipeline with Real-Time Feedback
     with st.chat_message("assistant"):
         with st.status("🔍 Evaluating Defense-in-Depth Pipeline & Agent Routing...", expanded=True) as status:
+            logger.info(f"Streamlit query received for session {st.session_state.session_id}: {user_query}")
             # Execute end-to-end agent pipeline
             response = financial_agent.process_query(
                 query=user_query,
