@@ -177,7 +177,8 @@ with st.sidebar:
     )
 
     st.markdown(f"**Session:** `{st.session_state.session_id}`")
-    if st.button("🏛️ View System Architecture & Intro", use_container_width=True):
+    arch_btn_type = "primary" if st.session_state.view_mode == "OVERVIEW" else "secondary"
+    if st.button("🏛️ Architecture & Overview", use_container_width=True, type=arch_btn_type):
         st.session_state.view_mode = "OVERVIEW"
         st.rerun()
     st.markdown("---")
@@ -266,53 +267,21 @@ if active_scenario_id:
     selected_scenario = next((s for s in ADVERSARIAL_ATTACK_SUITE if s.id == active_scenario_id), None)
 
 # -------------------------------------------------------------
-# MAIN APP HEADER
-# -------------------------------------------------------------
-st.markdown(
-    """
-    <div class="main-header">
-        <h1 class="main-title">
-            <span>📈</span> Autonomous Financial & Market Analyst Agent
-        </h1>
-        <p class="subtitle">
-            5-Layer Defense-in-Depth Pipeline • SEC EDGAR Form 10-K RAG • Live Market Gateway • Code Execution Sandbox
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-# -------------------------------------------------------------
-# TOP NAVIGATION: Segment A (Overview & Architecture) vs Segment B (Live Evaluation)
-# -------------------------------------------------------------
-nav_col1, nav_col2 = st.columns(2)
-with nav_col1:
-    btn_arch_type = "primary" if st.session_state.view_mode == "OVERVIEW" else "secondary"
-    if st.button("🏛️ System Overview & Architecture (Segment A)", use_container_width=True, type=btn_arch_type):
-        st.session_state.view_mode = "OVERVIEW"
-        st.rerun()
-with nav_col2:
-    btn_live_type = "primary" if st.session_state.view_mode == "LIVE_DEMO" else "secondary"
-    if st.button("⚡ Live Adversarial Matrix & Analyst Chat (Segment B)", use_container_width=True, type=btn_live_type):
-        st.session_state.view_mode = "LIVE_DEMO"
-        st.rerun()
-
-st.markdown("<div style='margin-bottom: 16px;'></div>", unsafe_allow_html=True)
-
-# -------------------------------------------------------------
-# SEGMENT A: SYSTEM OVERVIEW & ARCHITECTURE VIEW
+# STATE 1: CLEAN HOME / ARCHITECTURE PAGE
 # -------------------------------------------------------------
 if st.session_state.view_mode == "OVERVIEW":
-    # 1. Executive description card
+    # 1. Executive System Overview
     st.markdown(
         """
         <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <h3 style="color: #38bdf8; margin: 0; font-size: 20px; font-weight: 700;">Executive System Overview</h3>
-                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Segment A • 2-Minute Architecture Tour</span>
+            <div style="margin-bottom: 12px;">
+                <h2 style="color: #38bdf8; margin: 0; font-size: 24px; font-weight: 700;">📈 Autonomous Financial & Market Analyst Agent</h2>
+                <p style="color: #94a3b8; font-size: 13px; margin-top: 4px; margin-bottom: 0;">
+                    5-Layer Defense-in-Depth Pipeline • SEC EDGAR Form 10-K RAG • Live Market Gateway • Code Execution Sandbox
+                </p>
             </div>
-            <p style="color: #f1f5f9; font-size: 16.5px; line-height: 1.75; margin-bottom: 14px;">
-                <strong>Autonomous Financial and Market Analyst Agent.</strong> It functions like an independent equity analyst. The agent pulls live stock prices, reads audited annual filings, and runs mathematical valuation models. A human analyst might spend hours reading through spreadsheets, but my agent delivers the same professional analysis within seconds.
+            <p style="color: #f1f5f9; font-size: 16.5px; line-height: 1.75; margin-bottom: 16px;">
+                Autonomous Financial and Market Analyst Agent. It functions like an independent equity analyst. The agent pulls live stock prices, reads audited annual filings, and runs mathematical valuation models. A human analyst might spend hours reading through spreadsheets, but my agent delivers the same professional analysis within seconds.
             </p>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">⚡ Groq LPU Qwen 27B ReAct</span>
@@ -326,7 +295,7 @@ if st.session_state.view_mode == "OVERVIEW":
         unsafe_allow_html=True,
     )
 
-    # 2. Architecture Diagram (native st.image, fast & lightweight)
+    # 2. Architecture Diagram
     arch_image_path = os.path.join(ROOT_DIR, "architecture.png")
     if os.path.exists(arch_image_path):
         st.markdown("#### 📐 End-to-End System & LLMOps Architecture")
@@ -336,7 +305,7 @@ if st.session_state.view_mode == "OVERVIEW":
             use_container_width=True,
         )
 
-    # 3. 5 Defense Layers Breakdown Grid
+    # 3. 5-Layer Defense-in-Depth Pipeline Breakdown
     st.markdown("#### 🛡️ 5-Layer Defense-in-Depth Pipeline Breakdown")
     col_l1, col_l2, col_l3, col_l4, col_l5 = st.columns(5)
     with col_l1:
@@ -389,13 +358,6 @@ if st.session_state.view_mode == "OVERVIEW":
             """,
             unsafe_allow_html=True,
         )
-
-    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-    c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
-    with c_btn2:
-        if st.button("⚡ Launch Live 13-Test Adversarial Matrix (Segment B) →", use_container_width=True, type="primary"):
-            st.session_state.view_mode = "LIVE_DEMO"
-            st.rerun()
 
     st.stop()
 
@@ -500,14 +462,14 @@ for msg in st.session_state.messages:
                 iterations=meta.get("iterations", 1),
             )
 
-            # 2. Expandable Threat & Defense Deep-Dive Block
+            # 2. Expandable Threat & Defense Deep-Dive Block (Expanded by Default)
             render_defense_layer_analysis(
                 what_it_is=meta.get("what_it_is", ""),
                 what_it_harms=meta.get("what_it_harms", ""),
                 benefit=meta.get("benefit", ""),
                 how_defended=meta.get("how_defended", ""),
                 status=meta.get("status_val", "PASSED"),
-                expanded=meta.get("status_val") in ["BLOCKED", "MASKED", "REMEDIATED"],
+                expanded=True,
                 threat_detected=meta.get("threat_detected"),
                 detection_engine=meta.get("detection_engine"),
                 detection_method=meta.get("detection_method"),
@@ -531,17 +493,17 @@ for msg in st.session_state.messages:
         st.markdown(content)
 
         if meta:
-            # Interactive Visualization 1: Stock Chart if ticker present
+            # Interactive Visualization 1: Stock Chart if ticker present (Collapsed by Default)
             ticker = meta.get("ticker")
             if ticker and ticker in ["AAPL", "MSFT", "NVDA"]:
-                with st.expander(f"📊 Live Market Technicals & Price Trend ({ticker})", expanded=True):
+                with st.expander(f"📊 Live Market Technicals & Price Trend ({ticker})", expanded=False):
                     fig_stock = render_stock_chart(ticker=ticker)
                     st.plotly_chart(fig_stock, use_container_width=True)
 
-            # Interactive Visualization 2: DCF Sensitivity Matrix if valuation tool used
+            # Interactive Visualization 2: DCF Sensitivity Matrix if valuation tool used (Collapsed by Default)
             has_dcf = any("dcf" in t.get("tool", "").lower() for t in meta.get("tool_calls", []))
             if has_dcf:
-                with st.expander("🧮 Interactive DCF Enterprise Valuation Sensitivity Matrix", expanded=True):
+                with st.expander("🧮 Interactive DCF Enterprise Valuation Sensitivity Matrix", expanded=False):
                     fig_dcf = render_dcf_sensitivity_table(cash_flows=[100.0, 115.0, 130.0, 145.0, 160.0])
                     st.plotly_chart(fig_dcf, use_container_width=True)
 
@@ -781,14 +743,14 @@ if user_query:
             iterations=iterations,
         )
 
-        # 2. Render Expandable Threat & Defense Deep-Dive Block
+        # 2. Render Expandable Threat & Defense Deep-Dive Block (Expanded by Default)
         render_defense_layer_analysis(
             what_it_is=what_it_is,
             what_it_harms=what_it_harms,
             benefit=benefit,
             how_defended=how_defended,
             status=status_val,
-            expanded=status_val in ["BLOCKED", "MASKED", "REMEDIATED"],
+            expanded=True,
             threat_detected=threat_detected,
             detection_engine=detection_engine,
             detection_method=detection_method,
@@ -811,17 +773,17 @@ if user_query:
         # 4. Render Main Response Text
         st.markdown(final_content)
 
-        # 5. Render Stock Chart if relevant
+        # 5. Render Stock Chart if relevant (Collapsed by Default)
         if not is_sandbox_exploit and response.ticker and response.ticker in ["AAPL", "MSFT", "NVDA"]:
-            with st.expander(f"📊 Live Market Technicals & Price Trend ({response.ticker})", expanded=True):
+            with st.expander(f"📊 Live Market Technicals & Price Trend ({response.ticker})", expanded=False):
                 fig_stock = render_stock_chart(ticker=response.ticker)
                 st.plotly_chart(fig_stock, use_container_width=True)
 
-        # 6. Render DCF Sensitivity Matrix if relevant
+        # 6. Render DCF Sensitivity Matrix if relevant (Collapsed by Default)
         if not is_sandbox_exploit:
             has_dcf = any("dcf" in t.get("tool", "").lower() for t in tool_calls_trace)
             if has_dcf:
-                with st.expander("🧮 Interactive DCF Enterprise Valuation Sensitivity Matrix", expanded=True):
+                with st.expander("🧮 Interactive DCF Enterprise Valuation Sensitivity Matrix", expanded=False):
                     fig_dcf = render_dcf_sensitivity_table(cash_flows=[100.0, 115.0, 130.0, 145.0, 160.0])
                     st.plotly_chart(fig_dcf, use_container_width=True)
 

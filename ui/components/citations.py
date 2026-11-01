@@ -80,7 +80,7 @@ def render_defense_layer_analysis(
     benefit: str,
     how_defended: str,
     status: str = "BLOCKED",
-    expanded: bool = False,
+    expanded: bool = True,
     threat_detected: Optional[str] = None,
     detection_engine: Optional[str] = None,
     detection_method: Optional[str] = None,
@@ -94,9 +94,9 @@ def render_defense_layer_analysis(
     """
     is_benign = status.upper() == "PASSED"
     title = (
-        "📋 Evaluation & Verification Briefing (Click to Expand)"
+        "📋 Evaluation & Verification Briefing"
         if is_benign
-        else "📋 Threat Analysis & Defense Execution (Click to Expand)"
+        else "📋 Threat Analysis & Defense Execution"
     )
 
     with st.expander(title, expanded=expanded):
