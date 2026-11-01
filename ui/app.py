@@ -63,6 +63,11 @@ st.markdown(
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    
     /* Header card */
     .main-header {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -273,56 +278,72 @@ if st.session_state.view_mode == "OVERVIEW":
     # 1. Executive System Overview
     st.markdown(
         """
-        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);">
-            <div style="margin-bottom: 12px;">
-                <h2 style="color: #38bdf8; margin: 0; font-size: 24px; font-weight: 700;">📈 Autonomous Financial & Market Analyst Agent</h2>
-                <p style="color: #94a3b8; font-size: 13px; margin-top: 4px; margin-bottom: 0;">
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 10px; padding: 14px 20px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);">
+            <div style="margin-bottom: 6px;">
+                <h3 style="color: #38bdf8; margin: 0; font-size: 20px; font-weight: 700;">📈 Autonomous Financial & Market Analyst Agent</h3>
+                <p style="color: #94a3b8; font-size: 12px; margin-top: 2px; margin-bottom: 0;">
                     5-Layer Defense-in-Depth Pipeline • SEC EDGAR Form 10-K RAG • Live Market Gateway • Code Execution Sandbox
                 </p>
             </div>
-            <p style="color: #f1f5f9; font-size: 16.5px; line-height: 1.75; margin-bottom: 16px;">
+            <p style="color: #f1f5f9; font-size: 13.5px; line-height: 1.55; margin-bottom: 10px;">
                 Autonomous Financial and Market Analyst Agent. It functions like an independent equity analyst. The agent pulls live stock prices, reads audited annual filings, and runs mathematical valuation models. A human analyst might spend hours reading through spreadsheets, but my agent delivers the same professional analysis within seconds.
             </p>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">⚡ Groq LPU Qwen 27B ReAct</span>
-                <span style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">🛡️ 5-Layer Defense-in-Depth</span>
-                <span style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">📚 SEC Form 10-K RAG</span>
-                <span style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">🔒 Python AST Sandbox</span>
-                <span style="background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">⚖️ SEC Rule 10b-5 / FINRA 2210</span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;">⚡ Groq LPU Qwen 27B ReAct</span>
+                <span style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;">🛡️ 5-Layer Defense-in-Depth</span>
+                <span style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;">📚 SEC Form 10-K RAG</span>
+                <span style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;">🔒 Python AST Sandbox</span>
+                <span style="background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;">⚖️ SEC Rule 10b-5 / FINRA 2210</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # 2. Architecture Diagram (Lightweight WebP asset in ui/assets/)
+    # 2. Architecture Diagram (Centered & Proportioned)
     ui_dir = os.path.dirname(__file__)
     webp_path = os.path.join(ui_dir, "assets", "architecture.webp")
     png_fallback = os.path.join(ROOT_DIR, "architecture.png")
     arch_image_path = webp_path if os.path.exists(webp_path) else (png_fallback if os.path.exists(png_fallback) else None)
 
     if arch_image_path:
-        st.markdown("#### 📐 End-to-End System & LLMOps Architecture")
-        try:
-            st.image(
-                arch_image_path,
-                caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
-                use_column_width=True,
+        _, col_diag, _ = st.columns([0.20, 0.60, 0.20])
+        with col_diag:
+            st.markdown(
+                """
+                <div style="font-size: 13.5px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; text-align: center;">
+                    📐 End-to-End System & LLMOps Architecture
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-        except TypeError:
-            st.image(
-                arch_image_path,
-                caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
-            )
+            try:
+                st.image(
+                    arch_image_path,
+                    caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
+                    use_column_width=True,
+                )
+            except TypeError:
+                st.image(
+                    arch_image_path,
+                    caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
+                )
 
     # 3. 5-Layer Defense-in-Depth Pipeline Breakdown
-    st.markdown("#### 🛡️ 5-Layer Defense-in-Depth Pipeline Breakdown")
+    st.markdown(
+        """
+        <div style="font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 6px; margin-bottom: 8px;">
+            🛡️ 5-Layer Defense-in-Depth Pipeline Breakdown
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     col_l1, col_l2, col_l3, col_l4, col_l5 = st.columns(5)
     with col_l1:
         st.markdown(
             """
-            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
-                <strong style="color: #f43f5e; font-size: 13px;">Layer 1: Perimeter</strong><br><br>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; height: 100%;">
+                <strong style="color: #f43f5e; font-size: 12px;">Layer 1: Perimeter</strong><br><br>
                 Prompt Guard 86M & regex terminate prompt injection in &lt;10ms (0 Groq tokens).
             </div>
             """,
@@ -331,8 +352,8 @@ if st.session_state.view_mode == "OVERVIEW":
     with col_l2:
         st.markdown(
             """
-            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
-                <strong style="color: #f59e0b; font-size: 13px;">Layer 2: PII Gateway</strong><br><br>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; height: 100%;">
+                <strong style="color: #f59e0b; font-size: 12px;">Layer 2: PII Gateway</strong><br><br>
                 Automatic on-the-fly redaction of client SSNs, cards, and private emails (GDPR).
             </div>
             """,
@@ -341,8 +362,8 @@ if st.session_state.view_mode == "OVERVIEW":
     with col_l3:
         st.markdown(
             """
-            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
-                <strong style="color: #38bdf8; font-size: 13px;">Layer 3: Core ReAct</strong><br><br>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; height: 100%;">
+                <strong style="color: #38bdf8; font-size: 12px;">Layer 3: Core ReAct</strong><br><br>
                 Groq Qwen 27B LPU engine querying live quotes & audited SEC 10-K disclosures.
             </div>
             """,
@@ -351,8 +372,8 @@ if st.session_state.view_mode == "OVERVIEW":
     with col_l4:
         st.markdown(
             """
-            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
-                <strong style="color: #a855f7; font-size: 13px;">Layer 4: AST Sandbox</strong><br><br>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; height: 100%;">
+                <strong style="color: #a855f7; font-size: 12px;">Layer 4: AST Sandbox</strong><br><br>
                 Isolated Python math execution statically banning host OS, shell, and raw sockets.
             </div>
             """,
@@ -361,8 +382,8 @@ if st.session_state.view_mode == "OVERVIEW":
     with col_l5:
         st.markdown(
             """
-            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
-                <strong style="color: #10b981; font-size: 13px;">Layer 5: Policy Shield</strong><br><br>
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 10px 12px; font-size: 11.5px; height: 100%;">
+                <strong style="color: #10b981; font-size: 12px;">Layer 5: Policy Shield</strong><br><br>
                 Enforces SEC 10b-5 insider trading rules and FINRA 2210 risk disclaimers.
             </div>
             """,
