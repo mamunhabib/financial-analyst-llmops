@@ -129,6 +129,12 @@ if "session_id" not in st.session_state:
 if "run_all_active" not in st.session_state:
     st.session_state.run_all_active = False
 
+if "executed_scenarios" not in st.session_state:
+    st.session_state.executed_scenarios = {}
+
+if "current_scenario_id" not in st.session_state:
+    st.session_state.current_scenario_id = None
+
 INITIAL_WELCOME_MESSAGE = {
     "role": "assistant",
     "content": (
@@ -171,7 +177,36 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("### 🛡️ Security & Evaluation Suite")
-    st.caption("On-demand evaluation across 5 Defense-in-Depth layers:")
+    executed_count = len(st.session_state.get("executed_scenarios", {}))
+    st.caption(f"On-demand evaluation across 5 Defense layers ({executed_count}/13 tested):")
+
+    # Helper function to render scenario button with active & tested status markings
+    def render_scenario_btn(scenario: AttackScenario, default_icon: str):
+        is_active = (st.session_state.get("current_scenario_id") == scenario.id)
+        status_res = st.session_state.get("executed_scenarios", {}).get(scenario.id)
+
+        if status_res == "BLOCKED":
+            status_chip = " [🛡️ BLOCKED]"
+        elif status_res == "PASSED":
+            status_chip = " [✅ PASSED]"
+        elif status_res == "MASKED":
+            status_chip = " [🟡 MASKED]"
+        elif status_res == "REMEDIATED":
+            status_chip = " [🟣 REMEDIATED]"
+        else:
+            status_chip = ""
+
+        prefix = "▶ " if is_active else ""
+        button_label = f"{prefix}{default_icon} {scenario.name}{status_chip}"
+        button_type = "primary" if is_active else "secondary"
+
+        if st.button(button_label, key=f"btn_{scenario.id}", use_container_width=True, type=button_type):
+            st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
+            st.session_state.messages = []
+            st.session_state.current_scenario_id = scenario.id
+            st.session_state.active_scenario_id = scenario.id
+            st.session_state.executed_scenarios[scenario.id] = scenario.expected_defense
+            st.rerun()
 
     # MASTER BUTTON: Run All 13 Scenarios
     if st.button("⚡ Run Full Evaluation Suite (All 13)", use_container_width=True, type="primary"):
@@ -184,49 +219,35 @@ with st.sidebar:
     cat1 = [s for s in ADVERSARIAL_ATTACK_SUITE if s.category_group == "FACT_HALLUCINATION"]
     for s in cat1:
         icon = "📈" if "Inquiry" in s.name or "Baseline" in s.name else ("📚" if "Fact" in s.name else "🚫")
-        if st.button(f"{icon} {s.name}", key=f"btn_{s.id}", use_container_width=True):
-            st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
-            st.session_state.messages = []
-            st.session_state.active_scenario_id = s.id
-            st.rerun()
+        render_scenario_btn(s, icon)
 
     # CATEGORY 2: Ingress & Data Privacy
     st.markdown('<div class="sidebar-category-header">🛑 Ingress & Data Privacy</div>', unsafe_allow_html=True)
     cat2 = [s for s in ADVERSARIAL_ATTACK_SUITE if s.category_group == "INGRESS_PRIVACY"]
     for s in cat2:
         icon = "⚡" if "Direct" in s.name else ("🔓" if "Jailbreak" in s.name else ("🔒" if "PII" in s.name else "🔑"))
-        if st.button(f"{icon} {s.name}", key=f"btn_{s.id}", use_container_width=True):
-            st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
-            st.session_state.messages = []
-            st.session_state.active_scenario_id = s.id
-            st.rerun()
+        render_scenario_btn(s, icon)
 
     # CATEGORY 3: System & Code Execution Safety
     st.markdown('<div class="sidebar-category-header">💻 System & Code Execution</div>', unsafe_allow_html=True)
     cat3 = [s for s in ADVERSARIAL_ATTACK_SUITE if s.category_group == "CODE_EXECUTION"]
     for s in cat3:
         icon = "🚫" if "OS" in s.name else ("📂" if "File" in s.name else "🌐")
-        if st.button(f"{icon} {s.name}", key=f"btn_{s.id}", use_container_width=True):
-            st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
-            st.session_state.messages = []
-            st.session_state.active_scenario_id = s.id
-            st.rerun()
+        render_scenario_btn(s, icon)
 
     # CATEGORY 4: Enterprise Policy & Compliance
     st.markdown('<div class="sidebar-category-header">⚖️ Enterprise Policy & Compliance</div>', unsafe_allow_html=True)
     cat4 = [s for s in ADVERSARIAL_ATTACK_SUITE if s.category_group == "POLICY_COMPLIANCE"]
     for s in cat4:
         icon = "🚨" if "Insider" in s.name else ("📉" if "Manipulation" in s.name else "📜")
-        if st.button(f"{icon} {s.name}", key=f"btn_{s.id}", use_container_width=True):
-            st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
-            st.session_state.messages = []
-            st.session_state.active_scenario_id = s.id
-            st.rerun()
+        render_scenario_btn(s, icon)
 
     st.markdown("---")
     if st.button("🔄 Reset Conversation Session", use_container_width=True):
         st.session_state.session_id = f"session-{uuid.uuid4().hex[:8]}"
         st.session_state.run_all_active = False
+        st.session_state.current_scenario_id = None
+        st.session_state.executed_scenarios = {}
         st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
         st.rerun()
 
@@ -296,6 +317,7 @@ if st.session_state.get("run_all_active"):
                 observed_action = "PASSED"
 
         passed = observed_action == scenario.expected_defense
+        st.session_state.executed_scenarios[scenario.id] = observed_action
         audit_results.append({
             "#": idx,
             "Scenario": scenario.name,
@@ -692,6 +714,10 @@ if user_query:
             "metadata": metadata,
         },
     ]
-    if not active_scenario_meta:
+    if active_scenario_meta:
+        if "executed_scenarios" not in st.session_state:
+            st.session_state.executed_scenarios = {}
+        st.session_state.executed_scenarios[active_scenario_meta.id] = status_val
+    else:
         # For manual chat input, rerun immediately so previous conversation is cleared from view
         st.rerun()
