@@ -295,9 +295,13 @@ if st.session_state.view_mode == "OVERVIEW":
         unsafe_allow_html=True,
     )
 
-    # 2. Architecture Diagram
-    arch_image_path = os.path.join(ROOT_DIR, "architecture.png")
-    if os.path.exists(arch_image_path):
+    # 2. Architecture Diagram (Lightweight WebP asset in ui/assets/)
+    ui_dir = os.path.dirname(__file__)
+    webp_path = os.path.join(ui_dir, "assets", "architecture.webp")
+    png_fallback = os.path.join(ROOT_DIR, "architecture.png")
+    arch_image_path = webp_path if os.path.exists(webp_path) else (png_fallback if os.path.exists(png_fallback) else None)
+
+    if arch_image_path:
         st.markdown("#### 📐 End-to-End System & LLMOps Architecture")
         st.image(
             arch_image_path,
