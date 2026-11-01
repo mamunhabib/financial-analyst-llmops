@@ -135,6 +135,9 @@ if "executed_scenarios" not in st.session_state:
 if "current_scenario_id" not in st.session_state:
     st.session_state.current_scenario_id = None
 
+if "view_mode" not in st.session_state:
+    st.session_state.view_mode = "OVERVIEW"
+
 INITIAL_WELCOME_MESSAGE = {
     "role": "assistant",
     "content": (
@@ -174,6 +177,9 @@ with st.sidebar:
     )
 
     st.markdown(f"**Session:** `{st.session_state.session_id}`")
+    if st.button("🏛️ View System Architecture & Intro", use_container_width=True):
+        st.session_state.view_mode = "OVERVIEW"
+        st.rerun()
     st.markdown("---")
 
     st.markdown("### 🛡️ Security & Evaluation Suite")
@@ -206,12 +212,14 @@ with st.sidebar:
             st.session_state.current_scenario_id = scenario.id
             st.session_state.active_scenario_id = scenario.id
             st.session_state.executed_scenarios[scenario.id] = scenario.expected_defense
+            st.session_state.view_mode = "LIVE_DEMO"
             st.rerun()
 
     # MASTER BUTTON: Run All 13 Scenarios
     if st.button("⚡ Run Full Evaluation Suite (All 13)", use_container_width=True, type="primary"):
         st.session_state.run_all_active = True
         st.session_state.messages = []
+        st.session_state.view_mode = "LIVE_DEMO"
         st.rerun()
 
     # CATEGORY 1: Fact & Hallucination
@@ -248,6 +256,7 @@ with st.sidebar:
         st.session_state.run_all_active = False
         st.session_state.current_scenario_id = None
         st.session_state.executed_scenarios = {}
+        st.session_state.view_mode = "OVERVIEW"
         st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
         st.rerun()
 
@@ -272,6 +281,123 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# -------------------------------------------------------------
+# TOP NAVIGATION: Segment A (Overview & Architecture) vs Segment B (Live Evaluation)
+# -------------------------------------------------------------
+nav_col1, nav_col2 = st.columns(2)
+with nav_col1:
+    btn_arch_type = "primary" if st.session_state.view_mode == "OVERVIEW" else "secondary"
+    if st.button("🏛️ System Overview & Architecture (Segment A)", use_container_width=True, type=btn_arch_type):
+        st.session_state.view_mode = "OVERVIEW"
+        st.rerun()
+with nav_col2:
+    btn_live_type = "primary" if st.session_state.view_mode == "LIVE_DEMO" else "secondary"
+    if st.button("⚡ Live Adversarial Matrix & Analyst Chat (Segment B)", use_container_width=True, type=btn_live_type):
+        st.session_state.view_mode = "LIVE_DEMO"
+        st.rerun()
+
+st.markdown("<div style='margin-bottom: 16px;'></div>", unsafe_allow_html=True)
+
+# -------------------------------------------------------------
+# SEGMENT A: SYSTEM OVERVIEW & ARCHITECTURE VIEW
+# -------------------------------------------------------------
+if st.session_state.view_mode == "OVERVIEW":
+    # 1. Executive description card
+    st.markdown(
+        """
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <h3 style="color: #38bdf8; margin: 0; font-size: 20px; font-weight: 700;">Executive System Overview</h3>
+                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Segment A • 2-Minute Architecture Tour</span>
+            </div>
+            <p style="color: #f1f5f9; font-size: 16.5px; line-height: 1.75; margin-bottom: 14px;">
+                <strong>Autonomous Financial and Market Analyst Agent.</strong> It functions like an independent equity analyst. The agent pulls live stock prices, reads audited annual filings, and runs mathematical valuation models. A human analyst might spend hours reading through spreadsheets, but my agent delivers the same professional analysis within seconds.
+            </p>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <span style="background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">⚡ Groq LPU Qwen 27B ReAct</span>
+                <span style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">🛡️ 5-Layer Defense-in-Depth</span>
+                <span style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">📚 SEC Form 10-K RAG</span>
+                <span style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">🔒 Python AST Sandbox</span>
+                <span style="background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">⚖️ SEC Rule 10b-5 / FINRA 2210</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # 2. Architecture Diagram (native st.image, fast & lightweight)
+    arch_image_path = os.path.join(ROOT_DIR, "architecture.png")
+    if os.path.exists(arch_image_path):
+        st.markdown("#### 📐 End-to-End System & LLMOps Architecture")
+        st.image(
+            arch_image_path,
+            caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
+            use_container_width=True,
+        )
+
+    # 3. 5 Defense Layers Breakdown Grid
+    st.markdown("#### 🛡️ 5-Layer Defense-in-Depth Pipeline Breakdown")
+    col_l1, col_l2, col_l3, col_l4, col_l5 = st.columns(5)
+    with col_l1:
+        st.markdown(
+            """
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
+                <strong style="color: #f43f5e; font-size: 13px;">Layer 1: Perimeter</strong><br><br>
+                Prompt Guard 86M & regex terminate prompt injection in &lt;10ms (0 Groq tokens).
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_l2:
+        st.markdown(
+            """
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
+                <strong style="color: #f59e0b; font-size: 13px;">Layer 2: PII Gateway</strong><br><br>
+                Automatic on-the-fly redaction of client SSNs, cards, and private emails (GDPR).
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_l3:
+        st.markdown(
+            """
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
+                <strong style="color: #38bdf8; font-size: 13px;">Layer 3: Core ReAct</strong><br><br>
+                Groq Qwen 27B LPU engine querying live quotes & audited SEC 10-K disclosures.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_l4:
+        st.markdown(
+            """
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
+                <strong style="color: #a855f7; font-size: 13px;">Layer 4: AST Sandbox</strong><br><br>
+                Isolated Python math execution statically banning host OS, shell, and raw sockets.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with col_l5:
+        st.markdown(
+            """
+            <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 12px; height: 100%;">
+                <strong style="color: #10b981; font-size: 13px;">Layer 5: Policy Shield</strong><br><br>
+                Enforces SEC 10b-5 insider trading rules and FINRA 2210 risk disclaimers.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+    c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
+    with c_btn2:
+        if st.button("⚡ Launch Live 13-Test Adversarial Matrix (Segment B) →", use_container_width=True, type="primary"):
+            st.session_state.view_mode = "LIVE_DEMO"
+            st.rerun()
+
+    st.stop()
 
 # -------------------------------------------------------------
 # BATCH AUDIT MODE: "Run All 13 Scenarios"
