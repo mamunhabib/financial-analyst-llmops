@@ -303,11 +303,17 @@ if st.session_state.view_mode == "OVERVIEW":
 
     if arch_image_path:
         st.markdown("#### 📐 End-to-End System & LLMOps Architecture")
-        st.image(
-            arch_image_path,
-            caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
-            use_container_width=True,
-        )
+        try:
+            st.image(
+                arch_image_path,
+                caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
+                use_column_width=True,
+            )
+        except TypeError:
+            st.image(
+                arch_image_path,
+                caption="5-Layer Defense-in-Depth Pipeline • Kubernetes Cluster Deployment • Distributed Langfuse Tracing",
+            )
 
     # 3. 5-Layer Defense-in-Depth Pipeline Breakdown
     st.markdown("#### 🛡️ 5-Layer Defense-in-Depth Pipeline Breakdown")
